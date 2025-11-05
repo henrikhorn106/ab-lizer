@@ -1,29 +1,58 @@
-"""
-Table: ab_tests
+from flask_sqlalchemy import SQLAlchemy
 
-Field	Type	Description
-id	int	Primary key
-name	string	Test name
-description	text	Summary
-metric	string	e.g. “CTR”
-created_at	datetime	Timestamp
+db = SQLAlchemy()
 
-Table: variants
 
-Field	Type	Description
-id	int	Primary key
-test_id	FK	Related A/B test
-name	string	“Variant A”, “Variant B”
-impressions	int	Views
-conversions	int	Conversions
-conversion_rate	float	Computed
+class ab_tests(db.Model):
+    __tablename__ = 'ab_tests'
 
-Table: reports
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    metric = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
 
-Field	Type	Description
-id	int	Primary key
-test_id	FK	Related A/B test
-summary	text	AI insight
-significance	float	p-value
-ai_recommendation	text	Generated recommendation
-"""
+    __repr__ = lambda self: f'<Ab_Test {self.id}>'
+
+    __str__ = lambda self: f'{self.id}'
+
+
+class variants(db.Model):
+    __tablename__ = 'variants'
+
+    id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('ab_tests.id'), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    impressions = db.Column(db.Integer, nullable=False)
+    conversions = db.Column(db.Integer, nullable=False)
+    conversion_rate = db.Column(db.Float, nullable=False)
+
+    __repr__ = lambda self: f'<Variant {self.id}>'
+
+    __str__ = lambda self: f'{self.id}'
+
+
+class reports(db.Model):
+    __tablename__ = 'reports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('ab_tests.id'), nullable=False)
+    summary = db.Column(db.Text, nullable=False)
+    significance = db.Column(db.Float, nullable=False)
+    ai_recommendation = db.Column(db.Text, nullable=False)
+
+    __repr__ = lambda self: f'<Report {self.id}>'
+
+    __str__ = lambda self: f'{self.id}'
+
+
+class users(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+
+    __repr__ = lambda self: f'<User {self.name}>'
+
+    __str__ = lambda self: f'{self.name} - {self.email}'
