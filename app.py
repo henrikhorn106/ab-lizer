@@ -14,9 +14,9 @@ a connected database for test storage, and an AI layer that turns data into acti
 
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
-from models import db
+from data import models
 
 app = Flask(__name__)
 
@@ -24,8 +24,16 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'data/database.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db.init_app(app)
+models.db.init_app(app)
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
+        models.db.create_all()
+
+    app.run()
