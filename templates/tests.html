@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Tests</h1>
+<p>Get a overview about recent tests</p>
+<div class="col-wrapper">
+        <div class="card-list">
+            {% for test in data %}
+            <div class="card long">
+                <h2><strong>{{ test.name }}</strong></h2>
+                <p>{{ test.description }}</p>
+                <p><strong>Main Metric:</strong> {{ test.metric }}</p>
+                {% for variant in data[test] %}
+                    <h3>Variant {{ variant }}</h3>
+                    <p><strong>Impressions:</strong> {{ variant.impressions }}</p>
+                    <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
+                    <p><strong>Conversion Rate:</strong> {{ variant.conversion_rate }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

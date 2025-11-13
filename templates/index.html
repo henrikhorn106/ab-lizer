@@ -1,77 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-<style>
-    .card-wrapper {
-        display: flex;
-        gap: 16px;
-    }
-
-    .card {
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 10px;
-        width: 200px;
-        background-color: #ffffff;
-    }
-
-    .card.big {
-        width: 100%;
-    }
-
-    .card-title {
-        font-size: 18px;
-        font-weight: lighter;
-        margin-bottom: 5px;
-    }
-
-    .card-value {
-        font-size: 24px;
-        font-weight: bold;
-    }
-
-    .col-wrapper {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        flex-grow: 0;
-        flex-direction: row;
-    }
-
-    .pie {
-        height: 100px;
-        width: 100px;
-        border-radius: 50%;
-        background: conic-gradient(
-                deepskyblue 0% 25%,
-                orangered 25% 85%,
-                grey 85%
-        );
-    }
-
-    .pie.hollow {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .pie.hollow::after {
-        content: '';
-        position: sticky;
-        height: 80px;
-        width: 80px;
-        border-radius: 50%;
-        background-color: #FFFFFF;
-    }
-
-    .test-card {
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 10px;
-        background-color: gray;
-    }
-</style>
-
 <h1>Dashboard</h1>
 <p>Get a overview about your test performance</p>
 <div class="col-wrapper">
@@ -79,7 +8,7 @@
         <div class="card-wrapper">
             <div class="card">
                 <h2 class="card-title">Total Tests</h2>
-                <p class="card-value">25</p>
+                <p class="card-value">{{ total_tests }}</p>
             </div>
             <div class="card">
                 <h2 class="card-title">Total Tests</h2>
@@ -93,30 +22,23 @@
 
         <div class="card big">
             <h2>Test Results</h2>
-            <p>Homepage CTA Test</p>
+            {% for test in data %}
+            <p>{{ data.name }}</p>
             <div class="col-wrapper">
                 <div class="col-1">
+                    {% for variant in data[test] %}
                     <div class="test-card">
-                        <h3>A</h3>
+                        <h3>Variant {{ variant }}</h3>
                         <p>Sessions</p>
-                        <p>5.000</p>
+                        <p>{{ variant.impressions }}</p>
                         <p>Conversions</p>
-                        <p>200</p>
+                        <p>{{ variant.conversions }}</p>
                         <p>Conversion Rate</p>
-                        <p>4%</p>
+                        <p>{{ variant.conversion_rate }}</p>
                     </div>
+                    {% endfor %}
                 </div>
-                <div class="col-2">
-                    <div class="test-card">
-                        <h3>A</h3>
-                        <p>Sessions</p>
-                        <p>5.000</p>
-                        <p>Conversions</p>
-                        <p>200</p>
-                        <p>Conversion Rate</p>
-                        <p>4%</p>
-                    </div>
-                </div>
+            {% endfor %}
             </div>
 
         </div>
