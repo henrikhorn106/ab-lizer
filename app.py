@@ -16,7 +16,8 @@ import os
 
 from flask import Flask, render_template
 
-from data import models
+from data.models import db
+from data.db_manager import DBManager
 
 app = Flask(__name__)
 
@@ -24,7 +25,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'data/database.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-models.db.init_app(app)
+db.init_app(app)
+
+db_manager = DBManager()
 
 
 @app.route("/")
@@ -34,6 +37,6 @@ def index():
 
 if __name__ == "__main__":
     with app.app_context():
-        models.db.create_all()
+        db.create_all()
 
     app.run()
