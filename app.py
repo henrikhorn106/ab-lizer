@@ -17,7 +17,7 @@ import os
 from flask import Flask, render_template
 
 from data.db_manager import DBManager
-from data.models import db, variants
+from data.models import db
 
 app = Flask(__name__)
 
@@ -29,7 +29,6 @@ db.init_app(app)
 
 db_manager = DBManager()
 
-
 # Config
 os.environ["USER_NAME"] = "Henrik Horn"
 os.environ["USER_EMAIL"] = "henrik.horn106@gmail.com"
@@ -37,21 +36,29 @@ os.environ["USER_EMAIL"] = "henrik.horn106@gmail.com"
 user_name = os.environ.get("USER_NAME")
 user_email = os.environ.get("USER_EMAIL")
 
+
 @app.route("/")
 def index():
-
     total_tests = len(db_manager.get_ab_tests())
-    recent_test = db_manager.get_recent_test()
+    total_variants = db_manager.get_all_variants()
+    total_impressions = 0
+    total_conversions = 0
+    for variant in total_variants:
+        total_impressions += variant.impressions
+        total_conversions += variant.conversions
 
-    data = {}
+    recent_test = db_manager.get_recent_test()
+    test_data = {}
     for test in recent_test:
-        data[test] = db_manager.get_variants(test.id)
+        test_data[test] = db_manager.get_variants(test.id)
 
     return render_template("index.html",
                            user_name=user_name,
                            user_email=user_email,
                            total_tests=total_tests,
-                           data=data
+                           total_impressions=total_impressions,
+                           total_conversions=total_conversions,
+                           test_data=test_data
                            )
 
 

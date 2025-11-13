@@ -1,61 +1,89 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>Dashboard</h1>
-<p>Get a overview about your test performance</p>
-<div class="col-wrapper">
-    <div class="col-1">
-        <div class="card-wrapper">
-            <div class="card">
-                <h2 class="card-title">Total Tests</h2>
-                <p class="card-value">{{ total_tests }}</p>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Total Tests</h2>
-                <p class="card-value">25</p>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Total Tests</h2>
-                <p class="card-value">25</p>
-            </div>
-        </div>
-
-        <div class="card big">
-            <h2>Test Results</h2>
-            {% for test in data %}
-            <p>{{ data.name }}</p>
-            <div class="col-wrapper">
-                <div class="col-1">
-                    {% for variant in data[test] %}
-                    <div class="test-card">
-                        <h3>Variant {{ variant }}</h3>
-                        <p>Sessions</p>
-                        <p>{{ variant.impressions }}</p>
-                        <p>Conversions</p>
-                        <p>{{ variant.conversions }}</p>
-                        <p>Conversion Rate</p>
-                        <p>{{ variant.conversion_rate }}</p>
-                    </div>
-                    {% endfor %}
+    <h1>Dashboard</h1>
+    <p>Get a overview about your test performance</p>
+    <div class="col-wrapper">
+        <div class="col-1">
+            <div class="card-wrapper">
+                <div class="card accent">
+                    <h2 class="card-title">Total Tests</h2>
+                    <p class="card-value">{{ total_tests }}</p>
                 </div>
-            {% endfor %}
+                <div class="card">
+                    <h2 class="card-title">Total Impressions</h2>
+                    <p class="card-value">{{ total_impressions }}</p>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">Total Conversions</h2>
+                    <p class="card-value">{{ total_conversions }}</p>
+                </div>
+            </div>
+
+            <div class="card big">
+                <h2>Test Results</h2>
+                {% for test in test_data %}
+                    <p>{{ test.name }}</p>
+                    <div class="col-wrapper">
+                        {% for variant in test_data[test] %}
+                            <div class="test-card">
+                                <h3>Variant {{ variant }}</h3>
+                                <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
+                                <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
+                                <p><strong>Conversion Rates:</strong> {{ variant.conversion_rate }} %</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <div class="col-wrapper">
+                    <div class="card secondary">
+                        <p><strong>p-Value</strong>: 0.03%</p>
+                    </div>
+
+                    <div class="card accent">
+                        <p><strong>Significant</strong></p>
+                    </div>
+                </div>
+
+
             </div>
 
         </div>
 
-    </div>
+        <div class="col-2">
 
-    <div class="col-2">
+            <div class="card big">
+                <h2>Test Ratio</h2>
+                <div class="pie hollow"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color">
+                            <div class="winner"></div>
+                        </div>
+                        <span>Winner:</span>
+                        <span>33 %</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color">
+                            <div class="loser"></div>
+                        </div>
+                        <span>Loser:</span>
+                        <span>33 %</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color">
+                            <div class="na"></div>
+                        </div>
+                        <span>Other:</span>
+                        <span>33 %</span>
+                    </div>
+                </div>
 
-        <div class="card big">
-            <h2>Test Results</h2>
-            <p>Homepage CTA Test</p>
-            <div class="pie hollow"></div>
+            </div>
 
         </div>
-
     </div>
-</div>
 
 
 {% endblock %}

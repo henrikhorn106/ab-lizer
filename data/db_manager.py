@@ -34,8 +34,8 @@ class DBManager:
     def get_variants(self, test_id):
         return variants.query.filter_by(test_id=test_id).all()
 
-    def get_reports(self, test_id):
-        return reports.query.filter_by(test_id=test_id).all()
+    def get_report(self, test_id):
+        return reports.query.filter_by(test_id=test_id).first()
 
     def get_users(self):
         return users.query.all()

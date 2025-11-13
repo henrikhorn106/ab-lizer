@@ -1,8 +1,9 @@
 /* Global Styles */
 :root {
-    --primary: #000000;
+    --primary: #2E3E4A;
     --secondary: #F7F7F7;
     --accent: #317AAE;
+    --gradient: linear-gradient(180deg, rgba(25, 82, 133, 1) 0%, rgba(49, 122, 174, 1) 100%);
     --danger: #ef4444;
     --bg: #ffffff;
     --radius: 10px;
@@ -52,7 +53,7 @@ a {
 }
 
 .container {
-    padding: 32px 16px;
+    padding: 32px 26px;
     background: var(--secondary);
     border-radius: var(--radius);
     height: 100%;
@@ -62,7 +63,7 @@ nav {
     background: var(--bg);
 }
 
-nav .logo {
+.logo {
     font-size: 1.5rem;
     font-weight: bold;
     text-decoration: none;
@@ -95,15 +96,25 @@ input[type="text"] {
 }
 
 .sidenav a {
-    padding: 8px 8px;
     color: var(--primary);
     text-decoration: none;
     font-size: 25px;
     display: block;
 }
 
-.sidenav a:hover {
-    color: var(--accent);
+.sidenav .tab {
+    padding: 16px 16px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 25px;
+    display: block;
+    transition: 0.3s;
+    border-radius: 10px;
+}
+
+.sidenav .tab:hover {
+    background: var(--accent);
+    color: var(--secondary);
 }
 
 @media screen and (max-height: 450px) {
@@ -122,7 +133,7 @@ input[type="text"] {
     gap: 12px;
     background-color: var(--secondary);
     border-radius: 10px;
-    padding: 10px;
+    padding: 32px 26px;
     height: 100%;
 }
 
@@ -139,10 +150,44 @@ input[type="text"] {
 
 .card {
     border-radius: 10px;
-    padding: 10px;
+    padding: 20px;
     margin-bottom: 10px;
     width: 200px;
     background-color: #ffffff;
+}
+
+.card.gradient {
+    background: var(--gradient);
+}
+
+.gradient p {
+    color: #ffffff;
+    margin-bottom: 0;
+}
+
+.gradient h2 {
+    color: #ffffff;
+}
+
+.card.secondary {
+    background: var(--secondary);
+}
+
+.secondary p {
+    margin-bottom: 0;
+}
+
+.card.accent {
+    background: var(--accent);
+}
+
+.accent p {
+    color: var(--secondary);
+    margin-bottom: 0;
+}
+
+.accent h2 {
+    color: var(--secondary);
 }
 
 .card.big {
@@ -155,13 +200,13 @@ input[type="text"] {
 
 .card-title {
     font-size: 18px;
-    font-weight: lighter;
     margin-bottom: 5px;
 }
 
 .card-value {
-    font-size: 24px;
+    font-size: 30px;
     font-weight: bold;
+    margin: 0;
 }
 
 .col-wrapper {
@@ -173,13 +218,13 @@ input[type="text"] {
 }
 
 .pie {
-    height: 100px;
-    width: 100px;
+    height: 200px;
+    width: 200px;
     border-radius: 50%;
     background: conic-gradient(
-            deepskyblue 0% 25%,
-            orangered 25% 85%,
-            grey 85%
+            var(--primary) 0% 33%,
+            var(--secondary) 33% 66%,
+            var(--accent) 66% 100%
     );
 }
 
@@ -192,15 +237,52 @@ input[type="text"] {
 .pie.hollow::after {
     content: '';
     position: sticky;
-    height: 80px;
-    width: 80px;
+    height: 120px;
+    width: 120px;
     border-radius: 50%;
     background-color: #FFFFFF;
 }
 
 .test-card {
+    min-width: 250px;
     border-radius: 10px;
     padding: 10px;
     margin-bottom: 10px;
-    background-color: gray;
+    background-color: var(--secondary);
+}
+
+.legend {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+}
+
+.winner {
+    width: 100%;
+    height: 100%;
+    background-color: var(--accent);
+}
+
+.loser {
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary);
+}
+
+.na {
+    width: 100%;
+    height: 100%;
+    background-color: var(--secondary);
 }

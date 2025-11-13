@@ -9,11 +9,19 @@
 <div class="main-wrapper">
     <div class="sidenav" id="mySidenav">
         <div class="sidenav-container">
-            <a class="logo" href="/"><img src="{{ url_for('static', filename='logo_ab-lizer.png') }}" height="40px"></a>
-            <a href="/">Dashboard</a>
-            <a href="#">Analysis</a>
-            <a href="#">Reporting</a>
-            <a href="/tests">Tests</a>
+            <a class="logo" href="/"><img src="{{ url_for('static', filename='logo_ab-lizer.png') }}" height="50px"></a>
+            <a href="/">
+                <div class="tab">Dashboard</div>
+            </a>
+            <a href="#">
+                <div class="tab">Analysis</div>
+            </a>
+            <a href="#">
+                <div class="tab">Reporting</div>
+            </a>
+            <a href="/tests">
+                <div class="tab">Tests</div>
+            </a>
         </div>
     </div>
 
