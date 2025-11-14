@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h1>Dashboard</h1>
-    <p>Get a overview about your test performance</p>
+    <div class="hero">
+        <h1>Dashboard</h1>
+        <button class="btn">Add AB Test</button>
+    </div>
     <div class="col-wrapper">
         <div class="col-1">
             <div class="card-wrapper">
@@ -19,9 +21,8 @@
                     <p class="card-value">{{ total_conversions }}</p>
                 </div>
             </div>
-
             <div class="card big">
-                <h2>Test Results</h2>
+                <h2>Recent Test Results</h2>
                 {% for test in test_data %}
                     <p>{{ test.name }}</p>
                     <div class="col-wrapper">
@@ -35,24 +36,17 @@
                         {% endfor %}
                     </div>
                 {% endfor %}
-
                 <div class="col-wrapper">
                     <div class="card secondary">
                         <p><strong>p-Value</strong>: 0.03%</p>
                     </div>
-
                     <div class="card accent">
                         <p><strong>Significant</strong></p>
                     </div>
                 </div>
-
-
             </div>
-
         </div>
-
         <div class="col-2">
-
             <div class="card big">
                 <h2>Test Ratio</h2>
                 <div class="pie hollow"></div>
@@ -79,11 +73,8 @@
                         <span>33 %</span>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
-
 
 {% endblock %}
