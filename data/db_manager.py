@@ -39,3 +39,7 @@ class DBManager:
 
     def get_users(self):
         return users.query.all()
+
+    def delete_ab_test(self, test_id):
+        db.session.query(ab_tests).filter(ab_tests.id == test_id).delete()
+        db.session.commit()

@@ -40,5 +40,63 @@
 
     </div>
 </div>
+
+<!-- Modal -->
+<div id="testModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Neuen AB-Test erstellen</h2>
+        <form id="abTestForm" method="post" action="{{ url_for('create_test') }}">
+            <div class="form-group">
+                <label for="testName">Test Name:</label>
+                <input type="text" id="testName" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="testDescription">Description:</label>
+                <textarea id="testDescription" name="description" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="testMetric">Main Metrics:</label>
+                <input type="text" id="testMetric" name="metric">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Create</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Modal Elemente
+    const modal = document.getElementById('testModal');
+    const addTestBtn = document.getElementById('addTestBtn');
+    const closeBtn = document.querySelector('.close');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Modal öffnen
+    addTestBtn.addEventListener('click', () => {
+        modal.style.display = 'block';
+    });
+
+    // Modal schließen
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    // Modal schließen bei Klick außerhalb
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+</script>
 </body>
 </html>

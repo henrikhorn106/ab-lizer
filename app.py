@@ -14,7 +14,7 @@ a connected database for test storage, and an AI layer that turns data into acti
 
 import os
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
 
 from data.db_manager import DBManager
 from data.models import db
@@ -73,6 +73,25 @@ def tests():
                            user_email=user_email,
                            data=data
                            )
+
+
+@app.route("/tests", methods=["POST"])
+def create_test():
+    name = request.form.get("name")
+    description = request.form.get("description")
+    metric= request.form.get("metric")
+
+    # Erstelle den Test mit db_manager
+    db_manager.create_ab_test(name, description, metric)
+
+    return redirect(url_for("tests"))
+
+
+@app.route("/test/<int:test_id>", methods=["POST"])
+def delete_test(test_id):
+    db_manager.delete_ab_test(test_id)
+
+    return redirect(url_for("tests"))
 
 
 if __name__ == "__main__":
