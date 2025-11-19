@@ -52,13 +52,20 @@ def index():
     for test in recent_test:
         test_data[test] = db_manager.get_variants(test.id)
 
+        if test_data[test] == []:
+            has_variant = False
+        else:
+            has_variant = True
+
+
     return render_template("index.html",
                            user_name=user_name,
                            user_email=user_email,
                            total_tests=total_tests,
                            total_impressions=total_impressions,
                            total_conversions=total_conversions,
-                           test_data=test_data
+                           test_data=test_data,
+                           has_variant=has_variant
                            )
 
 

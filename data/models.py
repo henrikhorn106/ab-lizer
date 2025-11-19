@@ -53,6 +53,17 @@ class users(db.Model):
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), nullable=False)
 
+
+class companies(db.Model):
+    __tablename__ = 'companies'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    audience = db.Column(db.Text, nullable=False)
+    url = db.Column(db.String(255), nullable=False)
+
+
     __repr__ = lambda self: f'<User {self.name}>'
 
     __str__ = lambda self: f'{self.name} - {self.email}'
