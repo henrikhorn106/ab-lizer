@@ -8,6 +8,7 @@
     --bg: #ffffff;
     --radius: 10px;
     --shadow: 0 2px 8px rgba(30, 41, 59, 0.06);
+    --font-primary: 'Segoe UI', 'Roboto', Arial, sans-serif;
 }
 
 * {
@@ -15,7 +16,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    font-family: var(--font-primary);
     background: var(--bg);
     margin: 0;
     padding: 0;
@@ -381,6 +382,10 @@ input[type="text"] {
 .form-group textarea:focus {
     outline: none;
     border-color: #007bff;
+}
+
+textarea {
+    font-family: var(--font-primary);
 }
 
 .form-actions {

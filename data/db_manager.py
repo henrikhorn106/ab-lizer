@@ -55,6 +55,9 @@ class DBManager:
     def get_companies(self):
         return companies.query.all()
 
+    def get_company(self, company_id):
+        return companies.query.filter_by(id=company_id).first()
+
 
     # Update features
     def update_ab_test(self, test_id, name, description, metric):

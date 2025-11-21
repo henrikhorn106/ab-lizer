@@ -39,6 +39,8 @@ user_email = os.environ.get("USER_EMAIL")
 
 @app.route("/")
 def index():
+    user = db_manager.get_user(1)
+
     total_tests = len(db_manager.get_ab_tests())
     total_variants = db_manager.get_all_variants()
     total_impressions = 0
@@ -49,6 +51,7 @@ def index():
 
     recent_test = db_manager.get_recent_test()
     test_data = {}
+    has_variant = True
     for test in recent_test:
         test_data[test] = db_manager.get_variants(test.id)
 
@@ -59,8 +62,7 @@ def index():
 
 
     return render_template("index.html",
-                           user_name=user_name,
-                           user_email=user_email,
+                           user=user,
                            total_tests=total_tests,
                            total_impressions=total_impressions,
                            total_conversions=total_conversions,
@@ -69,21 +71,24 @@ def index():
                            )
 
 
-@app.route("/tests")
-def tests():
+@app.route("/tests/<int:user_id>")
+def tests(user_id):
+    user = db_manager.get_user(user_id)
+
     data = {}
     for test in db_manager.get_ab_tests():
         data[test] = db_manager.get_variants(test.id)
 
     return render_template("tests.html",
-                           user_name=user_name,
-                           user_email=user_email,
+                           user=user,
                            data=data
                            )
 
 
-@app.route("/tests", methods=["POST"])
-def create_test():
+@app.route("/tests/<int:user_id>", methods=["POST"])
+def create_test(user_id):
+    user = db_manager.get_user(user_id)
+
     name = request.form.get("name")
     description = request.form.get("description")
     metric= request.form.get("metric")
@@ -91,7 +96,7 @@ def create_test():
     # Erstelle den Test mit db_manager
     db_manager.create_ab_test(name, description, metric)
 
-    return redirect(url_for("tests"))
+    return redirect(url_for("tests", user_id=user_id))
 
 
 @app.route("/test/<int:test_id>", methods=["POST"])
@@ -101,28 +106,33 @@ def delete_test(test_id):
     return redirect(url_for("tests"))
 
 
-@app.route("/settings")
-def settings():
-    company = db_manager.get_companies()
-    print(company)
+@app.route("/settings/<int:user_id>")
+def settings(user_id):
+    user = db_manager.get_user(user_id)
+    company = db_manager.get_company(user.company_id)
+
     return render_template("settings.html",
-                           user_name=user_name,
-                           user_email=user_email,
+                           user=user,
                            company=company
                            )
 
-@app.route("/user", methods=["POST"])
-def update_user():
+@app.route("/settings/<int:user_id>", methods=["POST"])
+def update_user(user_id):
     name = request.form.get("name")
     email = request.form.get("email")
-    db_manager.update_user(1, name, email)
+    db_manager.update_user(user_id, name, email)
 
-    return redirect(url_for("settings"))
+    return redirect(url_for("settings", user_id=user_id))
 
-@app.route("/company", methods=["PUT"])
-def update_company():
-    pass
+@app.route("/settings/<int:user_id>/<int:company_id>", methods=["POST"])
+def update_company(user_id ,company_id):
+    name = request.form.get("company_name")
+    year = request.form.get("year")
+    audience = request.form.get("audience")
+    url = request.form.get("url")
+    db_manager.update_company(company_id, name, year, audience, url)
 
+    return redirect(url_for("settings", user_id=user_id))
 
 
 if __name__ == "__main__":
