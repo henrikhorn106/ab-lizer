@@ -31,7 +31,7 @@
                         <div class="col-wrapper">
                             {% for variant in test_data[test] %}
                                 <div class="test-card">
-                                    <h3>Variant {{ variant }}</h3>
+                                    <h3>{{ variant.name }}</h3>
                                     <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
                                     <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
                                     <p><strong>Conversion Rates:</strong> {{ variant.conversion_rate }} %</p>
@@ -48,9 +48,8 @@
                             </div>
                         </div>
 
-
                     {% else %}
-                        <button class="btn">Add Variants</button>
+                        <button class="btn" id="addVariantBtn">Add Variants</button>
                     {% endif %}
                     </div>
                 {% endfor %}

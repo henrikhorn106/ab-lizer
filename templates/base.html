@@ -44,7 +44,7 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal for creating a new test -->
 <div id="testModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -67,14 +67,49 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn">Create</button>
-                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="cancelTestBtn">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
+
+<!-- Modal for creating a new variant -->
+<div id="variantModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Create New Variant</h2>
+        {% for test in test_data %}
+            <form id="variantForm" method="post"
+                  action="{{ url_for('create_variant', user_id=user.id, test_id=test.id) }}">
+                <div class="form-group">
+                    <label for="name">Variant Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="impressions">Impressions:</label>
+                    <input type="number" id="impressions" name="impressions" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="conversions">Conversions:</label>
+                    <input type="number" id="conversions" name="conversions">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Create</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+</div>
+
 {% block scripts %}
-<script src="{{ url_for('static', filename='modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='modal_test.js') }}"></script>
+    <script src="{{ url_for('static', filename='modal_variant.js') }}"></script>
 {% endblock %}
+
 </body>
 </html>

@@ -386,6 +386,7 @@ input[type="text"] {
 
 textarea {
     font-family: var(--font-primary);
+    resize: vertical;
 }
 
 .form-actions {
