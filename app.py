@@ -32,88 +32,20 @@ db_manager = DBManager()
 
 
 # =================================================================
-# INDEX
+# HELPER FUNCTIONS
 # =================================================================
 
-@app.route("/")
-def index():
-    user = db_manager.get_user(1)
-
-    total_tests = len(db_manager.get_ab_tests())
-    total_variants = db_manager.get_all_variants()
-    total_impressions = 0
-    total_conversions = 0
-    for variant in total_variants:
-        total_impressions += variant.impressions
-        total_conversions += variant.conversions
-
-    # Test data
-    recent_test = db_manager.get_recent_test()
-    test_data = {}
-    has_variant = True
-    for test in recent_test:
-        test_data[test] = db_manager.get_variants(test.id)
-
-        if test_data[test] == []:
-            has_variant = False
-        else:
-            has_variant = True
-
-    # Report data
-    report_data = db_manager.get_report(recent_test[0].id)
-
-    return render_template("index.html",
-                           user=user,
-                           total_tests=total_tests,
-                           total_impressions=total_impressions,
-                           total_conversions=total_conversions,
-                           test_data=test_data,
-                           has_variant=has_variant,
-                           report_data=report_data
-                           )
-
-
-# =================================================================
-# TESTS & VARIANTS
-# =================================================================
-
-@app.route("/tests/<int:user_id>")
-def tests(user_id):
-    user = db_manager.get_user(user_id)
-
-    data = {}
-    for test in db_manager.get_ab_tests():
-        data[test] = db_manager.get_variants(test.id)
-
-    return render_template("tests.html",
-                           user=user,
-                           data=data
-                           )
-
-
-@app.route("/tests/<int:user_id>", methods=["POST"])
 def create_test(user_id):
     company = db_manager.get_company(user_id)
 
     name = request.form.get("name")
     description = request.form.get("description")
-    metric= request.form.get("metric")
+    metric = request.form.get("metric")
 
     db_manager.create_ab_test(company.id, name, description, metric)
 
-    return redirect(url_for("tests", user_id=user_id))
 
-
-@app.route("/tests/<int:user_id>/<int:test_id>", methods=["POST"])
-def delete_test(user_id, test_id):
-    db_manager.delete_ab_test(test_id)
-
-    return redirect(url_for("tests", user_id=user_id))
-
-
-@app.route("/variants/<int:user_id>/<int:test_id>", methods=["POST"])
-def create_variant(user_id, test_id):
-
+def create_variant(test_id):
     # Variant A
     name = "Variant A"
     impressions_a = request.form.get("var1_impressions")
@@ -145,7 +77,88 @@ def create_variant(user_id, test_id):
 
     db_manager.create_report(test_id, summary, data["p_value"], round(data["significant"], 2), "-")
 
-    return redirect(url_for("tests", user_id=user_id))
+
+# =================================================================
+# INDEX
+# =================================================================
+
+@app.route("/")
+def home_page():
+    user = db_manager.get_user(1)
+
+    total_tests = len(db_manager.get_ab_tests())
+    total_variants = db_manager.get_all_variants()
+    total_impressions = 0
+    total_conversions = 0
+    for variant in total_variants:
+        total_impressions += variant.impressions
+        total_conversions += variant.conversions
+
+    # Data for the most recent test
+    test = db_manager.get_recent_test()
+    variants = db_manager.get_variants(test[0].id)
+    report = db_manager.get_report(test[0].id)
+
+    return render_template("index.html",
+                           user=user,
+                           total_tests=total_tests,
+                           total_impressions=total_impressions,
+                           total_conversions=total_conversions,
+                           test=test,
+                           variants=variants,
+                           report=report
+                           )
+
+@app.route("/home/<int:user_id>", methods=["POST"])
+def home_page_create_test(user_id):
+    create_test(user_id)
+
+    return redirect(url_for("home_page", user_id=user_id))
+
+@app.route("/home/variants/<int:user_id>/<int:test_id>", methods=["POST"])
+def home_page_create_variant(user_id, test_id):
+    create_variant(test_id)
+
+    return redirect(url_for("home_page", user_id=user_id))
+
+
+
+# =================================================================
+# TESTS & VARIANTS
+# =================================================================
+
+@app.route("/tests/<int:user_id>")
+def tests_page(user_id):
+    user = db_manager.get_user(user_id)
+    tests = db_manager.get_ab_tests()
+    variants = db_manager.get_all_variants()
+
+    return render_template("tests.html",
+                           user=user,
+                           tests=tests,
+                           variants=variants
+                           )
+
+
+@app.route("/tests/<int:user_id>", methods=["POST"])
+def tests_page_create_test(user_id):
+    create_test(user_id)
+
+    return redirect(url_for("tests_page", user_id=user_id))
+
+
+@app.route("/tests/<int:user_id>/<int:test_id>", methods=["POST"])
+def tests_page_delete_test(user_id, test_id):
+    db_manager.delete_ab_test(test_id)
+
+    return redirect(url_for("tests_page", user_id=user_id))
+
+
+@app.route("/tests/variants/<int:user_id>/<int:test_id>", methods=["POST"])
+def tests_page_create_variant(user_id, test_id):
+    create_variant(test_id)
+
+    return redirect(url_for("tests_page", user_id=user_id))
 
 
 # =================================================================

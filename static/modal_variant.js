@@ -1,8 +1,8 @@
 // Modal Elemente
 const modal_variant = document.getElementById('variantModal');
 const addVariantBtn = document.getElementById('addVariantBtn');
-const closeVariantBtn = document.querySelector('.close');
-const cancelVariantBtn = document.getElementById('cancelBtn');
+const closeVariantBtn = document.getElementById('closeVariantBtn');
+const cancelVariantBtn = document.getElementById('cancelVariantBtn');
 
 // Modal öffnen
 addVariantBtn.addEventListener('click', () => {

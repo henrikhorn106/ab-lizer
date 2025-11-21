@@ -23,42 +23,40 @@
             </div>
             <div class="card big">
                 <h2>Recent Test Results</h2>
-                {% for test in test_data %}
-                    <p>{{ test.name }}</p>
-                    <p>{{ test.description }}</p>
+                <p>{{ test[0].name }}</p>
+                <p>{{ test[0].description }}</p>
 
-                    {% if has_variant == True %}
-                        <div class="col-wrapper">
-                            {% for variant in test_data[test] %}
-                                <div class="test-card">
-                                    <h3>{{ variant.name }}</h3>
-                                    <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
-                                    <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
-                                    <p><strong>Conversion Rates:</strong> {{ variant.conversion_rate }} %</p>
-                                </div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="col-wrapper">
-                            <div class="card secondary">
-                                <p><strong>p-Value</strong>: {{ report_data.p_value }}</p>
+                {% if variants != [] %}
+                    <div class="col-wrapper">
+                        {% for variant in variants %}
+                            <div class="test-card">
+                                <h3>{{ variant.name }}</h3>
+                                <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
+                                <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
+                                <p><strong>Conversion Rates:</strong> {{ variant.conversion_rate }} %</p>
                             </div>
-                                {% if report_data.significant %}
-                                    <div class="card accent">
-                                        <p><strong>Significant</strong></p>
-                                    </div>
-                                {% else %}
-                                    <div class="card secondary">
-                                        <p><strong>Not Significant</strong></p>
-                                    </div>
-                                {% endif %}
-                        </div>
-
-                    {% else %}
-                        <button class="btn" id="addVariantBtn">Add Variants</button>
-                    {% endif %}
+                        {% endfor %}
                     </div>
-                {% endfor %}
+
+                    <div class="col-wrapper">
+                        <div class="card secondary">
+                            <p><strong>p-Value</strong>: {{ report.p_value }}</p>
+                        </div>
+                        {% if report.significance %}
+                            <div class="card accent">
+                                <p><strong>Significant</strong></p>
+                            </div>
+                        {% else %}
+                            <div class="card secondary">
+                                <p><strong>Not Significant</strong></p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                {% else %}
+                    <button class="btn" id="addVariantBtn">Add Variants</button>
+                {% endif %}
+            </div>
 
 
         </div>
@@ -92,5 +90,87 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Modal for creating a new test -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <span id="closeTestBtn" class="close">&times;</span>
+            <h2>Create New AB-Test</h2>
+            <form id="abTestForm" method="post" action="{{ url_for('home_page_create_test', user_id=user.id) }}">
+                <div class="form-group">
+                    <label for="testName">Test Name:</label>
+                    <input type="text" id="testName" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="testDescription">Description:</label>
+                    <textarea id="testDescription" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="testMetric">Main Metrics:</label>
+                    <input type="text" id="testMetric" name="metric">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Create</button>
+                    <button type="button" class="btn btn-secondary" id="cancelTestBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal for creating a new variant -->
+    <div id="variantModal" class="modal">
+        <div class="modal-content">
+            <span id="closeVariantBtn" class="close">&times;</span>
+            <h2>Create New Variant</h2>
+            <form id="variantForm" method="post"
+                  action="{{ url_for('home_page_create_variant', user_id=user.id, test_id=test[0].id) }}">
+                <div class="column-grid-2">
+                    <div class="test-card variant">
+                        <h3>Variant A</h3>
+
+                        <div class="form-group">
+                            <label for="var1_impressions">Impressions:</label>
+                            <input type="number" id="var1_impressions" name="var1_impressions" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="var1_conversions">Conversions:</label>
+                            <input type="number" id="var1_conversions" name="var1_conversions">
+                        </div>
+                    </div>
+
+                    <div class="test-card variant">
+                        <h3>Variant B</h3>
+
+                        <div class="form-group">
+                            <label for="var2_impressions">Impressions:</label>
+                            <input type="number" id="var2_impressions" name="var2_impressions" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="var2_conversions">Conversions:</label>
+                            <input type="number" id="var2_conversions" name="var2_conversions">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Create</button>
+                    <button type="button" class="btn btn-secondary" id="cancelVariantBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% block scripts %}
+        <script src="{{ url_for('static', filename='modal_test.js') }}"></script>
+        <script src="{{ url_for('static', filename='modal_variant.js') }}"></script>
+    {% endblock %}
 
 {% endblock %}

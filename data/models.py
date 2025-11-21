@@ -40,9 +40,9 @@ class reports(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('ab_tests.id'), nullable=False)
     p_value = db.Column(db.Float, nullable=False)
     summary = db.Column(db.Text, nullable=False)
-    significance = db.Column(db.Float, nullable=False)
+    significance = db.Column(db.Boolean, nullable=False)
     ai_recommendation = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 
     __repr__ = lambda self: f'<Report {self.id}>'
 

@@ -1,7 +1,7 @@
 // Modal Elemente
 const modal_test = document.getElementById('testModal');
 const addTestBtn = document.getElementById('addTestBtn');
-const closeTestBtn = document.querySelector('.close');
+const closeTestBtn = document.getElementById('closeTestBtn');
 const cancelTestBtn = document.getElementById('cancelTestBtn');
 
 // Modal öffnen
