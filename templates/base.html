@@ -31,10 +31,20 @@
     <div class="wrapper">
 
         <nav>
-            <div class="container">
-                <p>{{ user.name }}</p>
-                <p>{{ user.email }}</p>
-
+            <div class="container navigation">
+                <div class="col-wrapper">
+                    <div class="profile">
+                        <div class="profile-image"> HH </div>
+                    </div>
+                    <div class="profile-info">
+                        <div>
+                            {{ user.name }}
+                        </div>
+                        <div>
+                            {{ user.email }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </nav>
         <main class="container">

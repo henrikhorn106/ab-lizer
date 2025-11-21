@@ -72,16 +72,42 @@ a {
 }
 
 .container {
-    padding: 32px 26px;
+    padding: 20px 20px;
     background: var(--secondary);
     border-radius: var(--radius);
     height: 100%;
+}
+
+.container.navigation {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .logo {
     font-size: 1.5rem;
     font-weight: bold;
     text-decoration: none;
+}
+
+.profile-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--primary);
+    padding: 2px;
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+    color: var(--secondary);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
 }
 
 button {
@@ -173,8 +199,8 @@ input[type="text"] {
 .card {
     border-radius: var( --radius);
     padding: 20px;
-    margin-bottom: 10px;
-    width: 200px;
+    margin-bottom: 16px;
+    min-width: 200px;
     background-color: #ffffff;
 }
 
@@ -244,6 +270,12 @@ input[type="text"] {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
+
+.column-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
 
 .pie {
     height: 200px;

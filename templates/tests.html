@@ -5,130 +5,125 @@
         <h1>All Tests</h1>
         <button class="btn" id="addTestBtn">Add AB Test</button>
     </div>
-    <div class="scroll">
-        <div class="col-wrapper">
-            <div class="card-list">
-                {% for test in tests %}
-                    <div class="card long">
-                        <h2><strong>{{ test.name }}</strong></h2>
-                        <p>{{ test.description }}</p>
-                        <p><strong>Main Metric:</strong> {{ test.metric }}</p>
-                        {% set ns = namespace(counter = 0) %}
-                        {% for variant in variants %}
-                            {% if variant.test_id == test.id %}
-                                <div class="card long secondary">
-                                    <div class="row">
-                                        <h3>{{ variant.name }}</h3>
-                                        <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
-                                        <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
-                                        <p><strong>Conversion Rate:</strong> {{ variant.conversion_rate }} %</p>
-                                    </div>
-                                </div>
-                                {% set ns.counter = ns.counter + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if ns.counter == 0 %}
+    <div class="card-list">
+        {% for test in tests %}
+            <div class="card long">
+                <h2><strong>{{ test.name }}</strong></h2>
+                <p>{{ test.description }}</p>
+                <p><strong>Main Metric:</strong> {{ test.metric }}</p>
+                {% set ns = namespace(counter = 0) %}
+                {% for variant in variants %}
+                    {% if variant.test_id == test.id %}
+                        <div class="card long secondary">
                             <div class="row">
-                                <button class="btn" id="addVariantBtn">Add Variants</button>
-                                <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
-                                      class="inline-form" method="post">
-                                    <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
-                                        Delete
-                                    </button>
-                                </form>
+                                <h3>{{ variant.name }}</h3>
+                                <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
+                                <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
+                                <p><strong>Conversion Rate:</strong> {{ variant.conversion_rate }} %</p>
                             </div>
-                            <!-- Modal for creating a new variant -->
-                            <div id="variantModal" class="modal">
-                                <div class="modal-content">
-                                    <span id="closeVariantBtn" class="close">&times;</span>
-                                    <h2>Create New Variant</h2>
-                                    <form id="variantForm" method="post"
-                                          action="{{ url_for('tests_page_create_variant', user_id=user.id, test_id=test.id) }}">
-                                        <div class="column-grid-2">
-                                            <div class="test-card variant">
-                                                <h3>Variant A</h3>
-
-                                                <div class="form-group">
-                                                    <label for="var1_impressions">Impressions:</label>
-                                                    <input type="number" id="var1_impressions" name="var1_impressions"
-                                                           required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="var1_conversions">Conversions:</label>
-                                                    <input type="number" id="var1_conversions" name="var1_conversions">
-                                                </div>
-                                            </div>
-
-                                            <div class="test-card variant">
-                                                <h3>Variant B</h3>
-
-                                                <div class="form-group">
-                                                    <label for="var2_impressions">Impressions:</label>
-                                                    <input type="number" id="var2_impressions" name="var2_impressions"
-                                                           required>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="var2_conversions">Conversions:</label>
-                                                    <input type="number" id="var2_conversions" name="var2_conversions">
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="form-actions">
-                                            <button type="submit" class="btn">Create</button>
-                                            <button type="button" class="btn btn-secondary" id="cancelVariantBtn">Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="row">
-                                <button class="btn">Edit</button>
-                                <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
-                                      class="inline-form" method="post">
-                                    <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
-                                        Delete
-                                    </button>
-                                </form>
-                            </div>
-                        {% endif %}
-                    </div>
+                        </div>
+                        {% set ns.counter = ns.counter + 1 %}
+                    {% endif %}
                 {% endfor %}
+                {% if ns.counter == 0 %}
+                    <div class="row">
+                        <button class="btn" id="addVariantBtn">Add Variants</button>
+                        <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
+                              class="inline-form" method="post">
+                            <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Modal for creating a new variant -->
+                    <div id="variantModal" class="modal">
+                        <div class="modal-content">
+                            <span id="closeVariantBtn" class="close">&times;</span>
+                            <h2>Create New Variant</h2>
+                            <form id="variantForm" method="post"
+                                  action="{{ url_for('tests_page_create_variant', user_id=user.id, test_id=test.id) }}">
+                                <div class="column-grid-2">
+                                    <div class="test-card variant">
+                                        <h3>Variant A</h3>
+
+                                        <div class="form-group">
+                                            <label for="var1_impressions">Impressions:</label>
+                                            <input type="number" id="var1_impressions" name="var1_impressions"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="var1_conversions">Conversions:</label>
+                                            <input type="number" id="var1_conversions" name="var1_conversions">
+                                        </div>
+                                    </div>
+
+                                    <div class="test-card variant">
+                                        <h3>Variant B</h3>
+
+                                        <div class="form-group">
+                                            <label for="var2_impressions">Impressions:</label>
+                                            <input type="number" id="var2_impressions" name="var2_impressions"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="var2_conversions">Conversions:</label>
+                                            <input type="number" id="var2_conversions" name="var2_conversions">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn">Create</button>
+                                    <button type="button" class="btn btn-secondary" id="cancelVariantBtn">Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="row">
+                        <button class="btn">Edit</button>
+                        <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
+                              class="inline-form" method="post">
+                            <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
             </div>
-        </div>
+        {% endfor %}
     </div>
 
     <!-- Modal for creating a new test -->
     <div id="testModal" class="modal">
-        <div class="modal-content">
-            <span id="closeTestBtn" class="close">&times;</span>
-            <h2>Create New AB-Test</h2>
-            <form id="abTestForm" method="post" action="{{ url_for('tests_page_create_test', user_id=user.id) }}">
-                <div class="form-group">
-                    <label for="testName">Test Name:</label>
-                    <input type="text" id="testName" name="name" required>
-                </div>
+    <div class="modal-content">
+        <span id="closeTestBtn" class="close">&times;</span>
+        <h2>Create New AB-Test</h2>
+        <form id="abTestForm" method="post" action="{{ url_for('tests_page_create_test', user_id=user.id) }}">
+            <div class="form-group">
+                <label for="testName">Test Name:</label>
+                <input type="text" id="testName" name="name" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="testDescription">Description:</label>
-                    <textarea id="testDescription" name="description" rows="3"></textarea>
-                </div>
+            <div class="form-group">
+                <label for="testDescription">Description:</label>
+                <textarea id="testDescription" name="description" rows="3"></textarea>
+            </div>
 
-                <div class="form-group">
-                    <label for="testMetric">Main Metrics:</label>
-                    <input type="text" id="testMetric" name="metric">
-                </div>
+            <div class="form-group">
+                <label for="testMetric">Main Metrics:</label>
+                <input type="text" id="testMetric" name="metric">
+            </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn">Create</button>
-                    <button type="button" class="btn btn-secondary" id="cancelTestBtn">Cancel</button>
-                </div>
-            </form>
-        </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Create</button>
+                <button type="button" class="btn btn-secondary" id="cancelTestBtn">Cancel</button>
+            </div>
+        </form>
     </div>
 
     {% block scripts %}

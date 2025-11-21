@@ -99,6 +99,9 @@ def home_page():
     variants = db_manager.get_variants(test[0].id)
     report = db_manager.get_report(test[0].id)
 
+    for variant in variants:
+        variant.conversion_rate = round(float(variant.conversions) / float(variant.impressions) * 100, 2)
+
     return render_template("index.html",
                            user=user,
                            total_tests=total_tests,

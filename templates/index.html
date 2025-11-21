@@ -5,9 +5,9 @@
         <h1>Dashboard</h1>
         <button class="btn" id="addTestBtn">Add AB Test</button>
     </div>
-    <div class="col-wrapper">
+    <div class="column-grid-2">
         <div class="col-1">
-            <div class="card-wrapper">
+            <div class="column-grid-3">
                 <div class="card accent">
                     <h2 class="card-title">Total Tests</h2>
                     <p class="card-value">{{ total_tests }}</p>
@@ -23,11 +23,12 @@
             </div>
             <div class="card big">
                 <h2>Recent Test Results</h2>
-                <p>{{ test[0].name }}</p>
+                <h3>{{ test[0].name }}</h3>
                 <p>{{ test[0].description }}</p>
+                <p><strong>Main Metric:</strong> {{ test[0].metric }}</p>
 
                 {% if variants != [] %}
-                    <div class="col-wrapper">
+                    <div class="column-grid-2">
                         {% for variant in variants %}
                             <div class="test-card">
                                 <h3>{{ variant.name }}</h3>
@@ -38,9 +39,9 @@
                         {% endfor %}
                     </div>
 
-                    <div class="col-wrapper">
+                    <div class="column-grid-3">
                         <div class="card secondary">
-                            <p><strong>p-Value</strong>: {{ report.p_value }}</p>
+                            <p><strong>p-Value:</strong> {{ report.p_value }}</p>
                         </div>
                         {% if report.significance %}
                             <div class="card accent">
@@ -51,6 +52,9 @@
                                 <p><strong>Not Significant</strong></p>
                             </div>
                         {% endif %}
+                        <div class="card secondary">
+                            <p><strong>Increase:</strong> 26.60 %</p>
+                        </div>
                     </div>
 
                 {% else %}
@@ -87,6 +91,11 @@
                         <span>33 %</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="card big">
+                <h2>AI Recommendation</h2>
+                <p>{{ report.ai_recommendation }}</p>
             </div>
         </div>
     </div>
