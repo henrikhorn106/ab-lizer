@@ -61,8 +61,7 @@ class companies(db.Model):
     name = db.Column(db.String(255), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     audience = db.Column(db.Text, nullable=False)
-    url = db.Column(db.String(255), nullable=False)
-
+    website = db.Column(db.String(255), nullable=False)
 
     __repr__ = lambda self: f'<User {self.name}>'
 

@@ -49,6 +49,12 @@ class DBManager:
     def get_users(self):
         return users.query.all()
 
+    def get_user(self, user_id):
+        return users.query.filter_by(id=user_id).first()
+
+    def get_companies(self):
+        return companies.query.all()
+
 
     # Update features
     def update_ab_test(self, test_id, name, description, metric):
@@ -56,6 +62,7 @@ class DBManager:
         test.name = name
         test.description = description
         test.metric = metric
+        db.session.commit()
 
     def update_variant(self, variant_id, name, impressions, conversions, conversion_rate):
         variant = variants.query.filter_by(id=variant_id).first()
@@ -63,16 +70,19 @@ class DBManager:
         variant.impressions = impressions
         variant.conversions = conversions
         variant.conversion_rate = conversion_rate
+        db.session.commit()
 
     def update_report(self, report_id, summary, significance, ai_recommendation):
         report = reports.query.filter_by(id=report_id).first()
         report.summary = summary
         report.significance = significance
+        db.session.commit()
 
     def update_user(self, user_id, name, email):
         user = users.query.filter_by(id=user_id).first()
         user.name = name
         user.email = email
+        db.session.commit()
 
     def update_company(self, company_id, name, year, audience, url):
         company = companies.query.filter_by(id=company_id).first()
@@ -80,6 +90,7 @@ class DBManager:
         company.year = year
         company.audience = audience
         company.url = url
+        db.session.commit()
 
 
     # Delete features

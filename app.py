@@ -101,6 +101,30 @@ def delete_test(test_id):
     return redirect(url_for("tests"))
 
 
+@app.route("/settings")
+def settings():
+    company = db_manager.get_companies()
+    print(company)
+    return render_template("settings.html",
+                           user_name=user_name,
+                           user_email=user_email,
+                           company=company
+                           )
+
+@app.route("/user", methods=["POST"])
+def update_user():
+    name = request.form.get("name")
+    email = request.form.get("email")
+    db_manager.update_user(1, name, email)
+
+    return redirect(url_for("settings"))
+
+@app.route("/company", methods=["PUT"])
+def update_company():
+    pass
+
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
