@@ -82,19 +82,35 @@
         {% for test in test_data %}
             <form id="variantForm" method="post"
                   action="{{ url_for('create_variant', user_id=user.id, test_id=test.id) }}">
-                <div class="form-group">
-                    <label for="name">Variant Name:</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
+                <div class="column-grid-2">
+                    <div class="test-card variant">
+                        <h3>Variant A</h3>
 
-                <div class="form-group">
-                    <label for="impressions">Impressions:</label>
-                    <input type="number" id="impressions" name="impressions" required>
-                </div>
+                        <div class="form-group">
+                            <label for="var1_impressions">Impressions:</label>
+                            <input type="number" id="var1_impressions" name="var1_impressions" required>
+                        </div>
 
-                <div class="form-group">
-                    <label for="conversions">Conversions:</label>
-                    <input type="number" id="conversions" name="conversions">
+                        <div class="form-group">
+                            <label for="var1_conversions">Conversions:</label>
+                            <input type="number" id="var1_conversions" name="var1_conversions">
+                        </div>
+                    </div>
+
+                    <div class="test-card variant">
+                        <h3>Variant B</h3>
+
+                        <div class="form-group">
+                            <label for="var2_impressions">Impressions:</label>
+                            <input type="number" id="var2_impressions" name="var2_impressions" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="var2_conversions">Conversions:</label>
+                            <input type="number" id="var2_conversions" name="var2_conversions">
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="form-actions">

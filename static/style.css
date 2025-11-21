@@ -239,6 +239,12 @@ input[type="text"] {
     flex-direction: row;
 }
 
+.column-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
 .pie {
     height: 200px;
     width: 200px;
@@ -271,6 +277,10 @@ input[type="text"] {
     padding: 10px;
     margin-bottom: 10px;
     background-color: var(--secondary);
+}
+
+.test-card.variant {
+    min-width: unset;
 }
 
 .legend {

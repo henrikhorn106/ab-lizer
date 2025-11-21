@@ -41,11 +41,17 @@
 
                         <div class="col-wrapper">
                             <div class="card secondary">
-                                <p><strong>p-Value</strong>: 0.03%</p>
+                                <p><strong>p-Value</strong>: {{ report_data.p_value }}</p>
                             </div>
-                            <div class="card accent">
-                                <p><strong>Significant</strong></p>
-                            </div>
+                                {% if report_data.significant %}
+                                    <div class="card accent">
+                                        <p><strong>Significant</strong></p>
+                                    </div>
+                                {% else %}
+                                    <div class="card secondary">
+                                        <p><strong>Not Significant</strong></p>
+                                    </div>
+                                {% endif %}
                         </div>
 
                     {% else %}

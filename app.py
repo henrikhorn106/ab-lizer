@@ -18,6 +18,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 
 from data.db_manager import DBManager
 from data.models import db
+from utils.significance_calculator import two_proportion_z_test
 
 app = Flask(__name__)
 
@@ -46,6 +47,7 @@ def index():
         total_impressions += variant.impressions
         total_conversions += variant.conversions
 
+    # Test data
     recent_test = db_manager.get_recent_test()
     test_data = {}
     has_variant = True
@@ -57,6 +59,8 @@ def index():
         else:
             has_variant = True
 
+    # Report data
+    report_data = db_manager.get_report(recent_test[0].id)
 
     return render_template("index.html",
                            user=user,
@@ -64,7 +68,8 @@ def index():
                            total_impressions=total_impressions,
                            total_conversions=total_conversions,
                            test_data=test_data,
-                           has_variant=has_variant
+                           has_variant=has_variant,
+                           report_data=report_data
                            )
 
 
@@ -108,12 +113,37 @@ def delete_test(user_id, test_id):
 
 @app.route("/variants/<int:user_id>/<int:test_id>", methods=["POST"])
 def create_variant(user_id, test_id):
-    name = request.form.get("name")
-    impressions = request.form.get("impressions")
-    conversions = request.form.get("conversions")
-    conversion_rate = round(float(conversions) / float(impressions) * 100, 2)
 
-    db_manager.create_variant(test_id, name, impressions, conversions, conversion_rate)
+    # Variant A
+    name = "Variant A"
+    impressions_a = request.form.get("var1_impressions")
+    conversions_a = request.form.get("var1_conversions")
+    conversion_rate = round(float(conversions_a) / float(impressions_a) * 100, 2)
+
+    db_manager.create_variant(test_id, name, impressions_a, conversions_a, conversion_rate)
+
+    # Variant B
+    name = "Variant B"
+    impressions_b = request.form.get("var2_impressions")
+    conversions_b = request.form.get("var2_conversions")
+    conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
+
+    db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
+
+    # Calculate significance
+    data = two_proportion_z_test(
+        int(impressions_a),
+        int(conversions_a),
+        int(impressions_b),
+        int(conversions_b)
+    )
+
+    if data["significant"]:
+        summary = "Test was significant."
+    else:
+        summary = "Test was not significant."
+
+    db_manager.create_report(test_id, summary, data["p_value"], round(data["significant"], 2), "-")
 
     return redirect(url_for("tests", user_id=user_id))
 

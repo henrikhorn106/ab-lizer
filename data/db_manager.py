@@ -26,12 +26,14 @@ class DBManager:
         db.session.add(variant)
         db.session.commit()
 
-    def create_report(self, test_id, summary, significance, ai_recommendation):
+    def create_report(self, test_id, summary, p_value,significance, ai_recommendation):
         report = reports(
             test_id=test_id,
-            summary=summary,
+            p_value=p_value,
             significance=significance,
-            ai_recommendation=ai_recommendation
+            summary=summary,
+            ai_recommendation=ai_recommendation,
+            created_at=db.func.now()
         )
         db.session.add(report)
         db.session.commit()
