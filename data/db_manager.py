@@ -62,11 +62,17 @@ class DBManager:
     def get_recent_test(self):
         return ab_tests.query.order_by(ab_tests.created_at.desc()).limit(1).all()
 
+    def get_test(self, test_id):
+        return ab_tests.query.filter_by(id=test_id).first()
+
     def get_all_variants(self):
         return variants.query.all()
 
     def get_variants(self, test_id):
         return variants.query.filter_by(test_id=test_id).all()
+
+    def get_all_reports(self):
+        return reports.query.all()
 
     def get_report(self, test_id):
         return reports.query.filter_by(test_id=test_id).first()
@@ -92,9 +98,8 @@ class DBManager:
         test.metric = metric
         db.session.commit()
 
-    def update_variant(self, variant_id, name, impressions, conversions, conversion_rate):
+    def update_variant(self, variant_id, impressions, conversions, conversion_rate):
         variant = variants.query.filter_by(id=variant_id).first()
-        variant.name = name
         variant.impressions = impressions
         variant.conversions = conversions
         variant.conversion_rate = conversion_rate

@@ -51,7 +51,6 @@ def create_variant(test_id):
     impressions_a = request.form.get("var1_impressions")
     conversions_a = request.form.get("var1_conversions")
     conversion_rate = round(float(conversions_a) / float(impressions_a) * 100, 2)
-
     db_manager.create_variant(test_id, name, impressions_a, conversions_a, conversion_rate)
 
     # Variant B
@@ -59,9 +58,12 @@ def create_variant(test_id):
     impressions_b = request.form.get("var2_impressions")
     conversions_b = request.form.get("var2_conversions")
     conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
-
     db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
 
+    create_report(test_id, impressions_a, conversions_a, impressions_b, conversions_b)
+
+
+def create_report(test_id, impressions_a, conversions_a, impressions_b, conversions_b):
     # Calculate significance
     data = two_proportion_z_test(
         int(impressions_a),
@@ -76,6 +78,21 @@ def create_variant(test_id):
         summary = "Test was not significant."
 
     db_manager.create_report(test_id, summary, data["p_value"], round(data["significant"], 2), "-")
+
+
+@app.template_filter('initials')
+def get_initials(name):
+    """Extract initials from a full name"""
+    if not name:
+        return ''
+
+    parts = name.strip().split()
+    print(parts)
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[1][0]).upper()
+    elif len(parts) == 1:
+        return parts[0][:2].upper()
+    return ''
 
 
 # =================================================================
@@ -112,18 +129,19 @@ def home_page():
                            report=report
                            )
 
+
 @app.route("/home/<int:user_id>", methods=["POST"])
 def home_page_create_test(user_id):
     create_test(user_id)
 
     return redirect(url_for("home_page", user_id=user_id))
 
+
 @app.route("/home/variants/<int:user_id>/<int:test_id>", methods=["POST"])
 def home_page_create_variant(user_id, test_id):
     create_variant(test_id)
 
     return redirect(url_for("home_page", user_id=user_id))
-
 
 
 # =================================================================
@@ -135,11 +153,13 @@ def tests_page(user_id):
     user = db_manager.get_user(user_id)
     tests = db_manager.get_ab_tests()
     variants = db_manager.get_all_variants()
+    reports = db_manager.get_all_reports()
 
     return render_template("tests.html",
                            user=user,
                            tests=tests,
-                           variants=variants
+                           variants=variants,
+                           reports=reports
                            )
 
 
@@ -162,6 +182,42 @@ def tests_page_create_variant(user_id, test_id):
     create_variant(test_id)
 
     return redirect(url_for("tests_page", user_id=user_id))
+
+# =================================================================
+# DETAILED TEST PAGE
+# =================================================================
+@app.route("/detailed/<int:user_id>/<int:test_id>")
+def detailed_test_page(user_id, test_id):
+    user = db_manager.get_user(user_id)
+    test = db_manager.get_test(test_id)
+    variants = db_manager.get_variants(test_id)
+    report = db_manager.get_report(test_id)
+
+    return render_template("detail.html", user=user, test=test, variants=variants, report=report)
+
+
+@app.route("/detailed/<int:user_id>/<int:test_id>", methods=["POST"])
+def detailed_test_page_update_variant(user_id, test_id):
+    # Update test
+    name = request.form.get("name")
+    description = request.form.get("description")
+    metric = request.form.get("metric")
+    db_manager.update_ab_test(test_id, name, description, metric)
+
+    # Update variants (mehrere auf einmal)
+    variant_ids = request.form.getlist("variant_id[]")
+    sessions_list = request.form.getlist("sessions[]")
+    conversions_list = request.form.getlist("conversions[]")
+
+    # Durch alle Varianten iterieren
+    for i in range(len(variant_ids)):
+        variant_id = variant_ids[i]
+        impressions = sessions_list[i]
+        conversions = conversions_list[i]
+        conversion_rate = round(float(conversions) / float(impressions) * 100, 2)
+        db_manager.update_variant(variant_id, impressions, conversions, conversion_rate)
+
+    return redirect(url_for("detailed_test_page", user_id=user_id, test_id=test_id))
 
 
 # =================================================================

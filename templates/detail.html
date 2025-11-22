@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block page_title %}Edit Test{% endblock %}
+{% block page_button %}
+    <button form="edit-form" class="btn" type="submit">Update AB Test</button>{% endblock %}
+{% block content %}
+
+    <div class="card big">
+        <form class="details-form" id="edit-form" method="post" action="">
+            <input type="text" class="details-head" name="name" value="{{ test.name }}">
+            <input type="text" name="description" value="{{ test.description }}">
+            <div class="details-form-group">
+                <label for="metric">Main Metric:</label>
+                <input class="details-item" type="text" id="metric" name="metric" value="{{ test.metric }}">
+            </div>
+
+            {% if variants != [] %}
+                <div class="column-grid-2">
+                    {% for variant in variants %}
+                        <div class="test-card">
+                            <input type="hidden" name="variant_id[]" value="{{ variant.id }}">
+                            <h3 class="details-name">{{ variant.name }}</h3>
+                            <div class="details-form-group">
+                                <label for="sessions_{{ loop.index }}"><strong>Sessions:</strong></label>
+                                <input class="details-item" type="text" id="sessions_{{ loop.index }}" name="sessions[]"
+                                       value="{{ variant.impressions }}">
+                            </div>
+                            <div class="details-form-group">
+                                <label for="conversions_{{ loop.index }}"><strong>Conversions:</strong></label>
+                                <input class="details-item" type="text" id="conversions_{{ loop.index }}"
+                                       name="conversions[]" value="{{ variant.conversions }}">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="column-grid-3">
+                    <div class="card secondary">
+                        <p><strong>Increase:</strong> 26.60 %</p>
+                    </div>
+                    <div class="card secondary">
+                        <p><strong>p-Value:</strong> {{ report.p_value }}</p>
+                    </div>
+                    {% if report.significance %}
+                        <div class="card accent">
+                            <p><strong>Significant</strong></p>
+                        </div>
+                    {% else %}
+                        <div class="card secondary">
+                            <p><strong>Not Significant</strong></p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            {% else %}
+                <button class="btn" id="addVariantBtn">Add Variants</button>
+            {% endif %}
+        </form>
+    </div>
+
+
+
+{% endblock %}

@@ -51,8 +51,9 @@ a {
 /* Base Layout */
 .hero {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
 }
 
 .main-wrapper {
@@ -78,9 +79,10 @@ a {
     height: 100%;
 }
 
-.container.navigation {
+.container.navigation, h1 {
+    margin-bottom: 0;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -201,23 +203,35 @@ input[type="text"] {
     padding: 20px;
     margin-bottom: 16px;
     min-width: 200px;
-    background-color: #ffffff;
+    background-color: var(--bg);
 }
 
-.card.gradient {
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.gradient {
     background: var(--gradient);
 }
 
+.tag {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
 .gradient p {
-    color: #ffffff;
+    color: var(--bg);
     margin-bottom: 0;
 }
 
 .gradient h2 {
-    color: #ffffff;
+    color: var(--bg);
 }
 
-.card.secondary {
+.secondary {
     background: var(--secondary);
 }
 
@@ -225,7 +239,7 @@ input[type="text"] {
     margin-bottom: 0;
 }
 
-.card.accent {
+.accent {
     background: var(--accent);
 }
 
@@ -277,6 +291,14 @@ input[type="text"] {
     gap: 16px;
 }
 
+.chart-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 26px;
+    flex-wrap: wrap;
+}
+
 .pie {
     height: 200px;
     width: 200px;
@@ -300,7 +322,7 @@ input[type="text"] {
     height: 120px;
     width: 120px;
     border-radius: 50%;
-    background-color: #FFFFFF;
+    background-color: var(--bg);
 }
 
 .test-card {
@@ -316,9 +338,10 @@ input[type="text"] {
 }
 
 .legend {
-    margin-top: 20px;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+    flex-direction: column;
 }
 
 .legend-item {
@@ -377,7 +400,7 @@ input[type="text"] {
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: var(--bg);
     margin: 5% auto;
     padding: 30px;
     border-radius: 8px;
@@ -423,7 +446,35 @@ input[type="text"] {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: var(--primary);
+}
+
+.details-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.details-head[type="text"] {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary);
+    background-color: unset;
+}
+
+.details-item[type="text"] {
+    width: unset;
+    background-color: unset;
+}
+
+.details-form-group {
+    margin-left: 12px;
+    color: var(--primary);
+}
+
+.details-name {
+    margin-left: 12px;
+    margin-top: 12px;
 }
 
 textarea {
@@ -444,6 +495,14 @@ textarea {
 
 .btn-secondary:hover {
     background-color: #5a6268;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
 }
 
 @keyframes fadeIn {

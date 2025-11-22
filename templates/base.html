@@ -32,9 +32,17 @@
 
         <nav>
             <div class="container navigation">
+                <div class="hero">
+                    <div>
+                        <h1>{% block page_title %}{% endblock %}</h1>
+                    </div>
+                    <div>
+                        {% block page_button %}{% endblock %}
+                    </div>
+                </div>
                 <div class="col-wrapper">
                     <div class="profile">
-                        <div class="profile-image"> HH </div>
+                        <div class="profile-image">{{ user.name|initials }}</div>
                     </div>
                     <div class="profile-info">
                         <div>

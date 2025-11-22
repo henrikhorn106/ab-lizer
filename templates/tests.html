@@ -1,14 +1,27 @@
 {% extends "base.html" %}
+{% block page_title %}All Tests{% endblock %}
+{% block page_button %}<button class="btn" id="addTestBtn">Add AB Test</button>{% endblock %}
 {% block content %}
 
-    <div class="hero">
-        <h1>All Tests</h1>
-        <button class="btn" id="addTestBtn">Add AB Test</button>
-    </div>
     <div class="card-list">
         {% for test in tests %}
             <div class="card long">
-                <h2><strong>{{ test.name }}</strong></h2>
+                <div class="card-header">
+                    <h2><strong>{{ test.name }}</strong></h2>
+                    {% for report in reports %}
+                        {% if report.test_id == test.id %}
+                            {% if report.significance %}
+                                <div class="tag gradient">
+                                    <p><strong>Significant</strong></p>
+                                </div>
+                            {% else %}
+                                <div class="tag secondary">
+                                    <p><strong>Not Significant</strong></p>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
                 <p>{{ test.description }}</p>
                 <p><strong>Main Metric:</strong> {{ test.metric }}</p>
                 {% set ns = namespace(counter = 0) %}
@@ -85,10 +98,12 @@
                     </div>
                 {% else %}
                     <div class="row">
-                        <button class="btn">Edit</button>
+                        <a href="{{ url_for('detailed_test_page', user_id=user.id, test_id=test.id) }}">
+                            <button class="btn" type="button" >Edit</button>
+                        </a>
                         <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
                               class="inline-form" method="post">
-                            <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
+                            <button type="button" class="btn-danger" onclick="return confirm('Delete this test?');" type="submit">
                                 Delete
                             </button>
                         </form>

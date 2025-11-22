@@ -1,14 +1,13 @@
 {% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_button %}
+    <button class="btn" id="addTestBtn">Add AB Test</button>{% endblock %}
 {% block content %}
 
-    <div class="hero">
-        <h1>Dashboard</h1>
-        <button class="btn" id="addTestBtn">Add AB Test</button>
-    </div>
     <div class="column-grid-2">
         <div class="col-1">
             <div class="column-grid-3">
-                <div class="card accent">
+                <div class="card gradient">
                     <h2 class="card-title">Total Tests</h2>
                     <p class="card-value">{{ total_tests }}</p>
                 </div>
@@ -41,10 +40,13 @@
 
                     <div class="column-grid-3">
                         <div class="card secondary">
+                            <p><strong>Increase:</strong> 26.60 %</p>
+                        </div>
+                        <div class="card secondary">
                             <p><strong>p-Value:</strong> {{ report.p_value }}</p>
                         </div>
                         {% if report.significance %}
-                            <div class="card accent">
+                            <div class="card gradient">
                                 <p><strong>Significant</strong></p>
                             </div>
                         {% else %}
@@ -52,9 +54,6 @@
                                 <p><strong>Not Significant</strong></p>
                             </div>
                         {% endif %}
-                        <div class="card secondary">
-                            <p><strong>Increase:</strong> 26.60 %</p>
-                        </div>
                     </div>
 
                 {% else %}
@@ -67,28 +66,30 @@
         <div class="col-2">
             <div class="card big">
                 <h2>Test Ratio</h2>
-                <div class="pie hollow"></div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color">
-                            <div class="winner"></div>
+                <div class="chart-container">
+                    <div class="pie hollow"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color">
+                                <div class="winner"></div>
+                            </div>
+                            <span>Winner:</span>
+                            <span>33 %</span>
                         </div>
-                        <span>Winner:</span>
-                        <span>33 %</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color">
-                            <div class="loser"></div>
+                        <div class="legend-item">
+                            <div class="legend-color">
+                                <div class="loser"></div>
+                            </div>
+                            <span>Loser:</span>
+                            <span>33 %</span>
                         </div>
-                        <span>Loser:</span>
-                        <span>33 %</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color">
-                            <div class="na"></div>
+                        <div class="legend-item">
+                            <div class="legend-color">
+                                <div class="na"></div>
+                            </div>
+                            <span>Other:</span>
+                            <span>33 %</span>
                         </div>
-                        <span>Other:</span>
-                        <span>33 %</span>
                     </div>
                 </div>
             </div>
