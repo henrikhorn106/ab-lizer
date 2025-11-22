@@ -107,7 +107,7 @@
         <div class="modal-content">
             <span id="closeTestBtn" class="close">&times;</span>
             <h2>Create New AB-Test</h2>
-            <form id="abTestForm" method="post" action="{{ url_for('home_page_create_test', user_id=user.id) }}">
+            <form id="abTestForm" method="post" action="{{ url_for('home.home_page_create_test', user_id=user.id) }}">
                 <div class="form-group">
                     <label for="testName">Test Name:</label>
                     <input type="text" id="testName" name="name" required>
@@ -138,7 +138,7 @@
             <span id="closeVariantBtn" class="close">&times;</span>
             <h2>Create New Variant</h2>
             <form id="variantForm" method="post"
-                  action="{{ url_for('home_page_create_variant', user_id=user.id, test_id=test[0].id) }}">
+                  action="{{ url_for('home.home_page_create_variant', user_id=user.id, test_id=test[0].id) }}">
                 <div class="column-grid-2">
                     <div class="test-card variant">
                         <h3>Variant A</h3>
