@@ -103,7 +103,7 @@
                         </a>
                         <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
                               class="inline-form" method="post">
-                            <button type="button" class="btn-danger" onclick="return confirm('Delete this test?');" type="submit">
+                            <button class="btn-danger" onclick="return confirm('Delete this test?');" type="submit">
                                 Delete
                             </button>
                         </form>

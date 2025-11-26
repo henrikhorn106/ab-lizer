@@ -18,6 +18,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 
 from data.db_manager import DBManager
 from data.models import db
+from routes.ai import generate_ai_recommendation
+from routes.tests import tranform_data
 from utils.significance_calculator import two_proportion_z_test
 
 app = Flask(__name__)
@@ -45,7 +47,8 @@ def create_test(user_id):
     db_manager.create_ab_test(company.id, name, description, metric)
 
 
-def create_variant(test_id):
+def create_variant(test_id, company_id):
+
     # Variant A
     name = "Variant A"
     impressions_a = request.form.get("var1_impressions")
@@ -60,10 +63,10 @@ def create_variant(test_id):
     conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
     db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
 
-    create_report(test_id, impressions_a, conversions_a, impressions_b, conversions_b)
+    create_report(test_id, company_id, impressions_a, conversions_a, impressions_b, conversions_b)
 
 
-def create_report(test_id, impressions_a, conversions_a, impressions_b, conversions_b):
+def create_report(test_id, company_id, impressions_a, conversions_a, impressions_b, conversions_b):
     # Calculate significance
     data = two_proportion_z_test(
         int(impressions_a),
@@ -77,7 +80,11 @@ def create_report(test_id, impressions_a, conversions_a, impressions_b, conversi
     else:
         summary = "Test was not significant."
 
-    db_manager.create_report(test_id, summary, data["p_value"], round(data["significant"], 2), "-")
+    test = db_manager.get_test(test_id, company_id)
+    tranform_data(test, db_manager.get_variants(test.id), data)
+    ai_recommendation = generate_ai_recommendation(data)
+
+    db_manager.create_report(test_id, summary, round(data["p_value"], 2), data["significant"], ai_recommendation)
 
 
 @app.template_filter('initials')
@@ -87,7 +94,6 @@ def get_initials(name):
         return ''
 
     parts = name.strip().split()
-    print(parts)
     if len(parts) >= 2:
         return (parts[0][0] + parts[1][0]).upper()
     elif len(parts) == 1:
@@ -101,10 +107,10 @@ def get_initials(name):
 
 @app.route("/")
 def home_page():
-    user = db_manager.get_user(2)
+    user = db_manager.get_user(1)
 
     total_tests = len(db_manager.get_ab_tests(user.company_id))
-    total_variants = db_manager.get_all_variants()
+    total_variants = db_manager.get_all_variants(user.company_id)
     total_impressions = 0
     total_conversions = 0
     for variant in total_variants:
@@ -143,7 +149,8 @@ def home_page_create_test(user_id):
 
 @app.route("/home/variants/<int:user_id>/<int:test_id>", methods=["POST"])
 def home_page_create_variant(user_id, test_id):
-    create_variant(test_id)
+    company_id = db_manager.get_company(user_id).id
+    create_variant(test_id, company_id)
 
     return redirect(url_for("home_page", user_id=user_id))
 
@@ -156,7 +163,7 @@ def home_page_create_variant(user_id, test_id):
 def tests_page(user_id):
     user = db_manager.get_user(user_id)
     tests = db_manager.get_ab_tests(user.company_id)
-    variants = db_manager.get_all_variants()
+    variants = db_manager.get_all_variants(user.company_id)
     reports = db_manager.get_all_reports()
 
     return render_template("tests.html",
@@ -193,7 +200,7 @@ def tests_page_create_variant(user_id, test_id):
 @app.route("/detailed/<int:user_id>/<int:test_id>")
 def detailed_test_page(user_id, test_id):
     user = db_manager.get_user(user_id)
-    test = db_manager.get_test(test_id)
+    test = db_manager.get_test(test_id, user.company_id)
     variants = db_manager.get_variants(test_id)
     report = db_manager.get_report(test_id)
 
