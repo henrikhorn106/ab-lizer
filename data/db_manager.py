@@ -56,14 +56,14 @@ class DBManager:
 
 
     # Read features
-    def get_ab_tests(self):
-        return ab_tests.query.all()
+    def get_ab_tests(self, company_id):
+        return ab_tests.query.filter_by(company_id=company_id).all()
 
-    def get_recent_test(self):
-        return ab_tests.query.order_by(ab_tests.created_at.desc()).limit(1).all()
+    def get_recent_test(self, company_id):
+        return ab_tests.query.filter_by(company_id=company_id).order_by(ab_tests.created_at.desc()).first()
 
-    def get_test(self, test_id):
-        return ab_tests.query.filter_by(id=test_id).first()
+    def get_test(self, test_id, company_id):
+        return ab_tests.query.filter_by(id=test_id, company_id=company_id).first()
 
     def get_all_variants(self):
         return variants.query.all()

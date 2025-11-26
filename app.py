@@ -101,9 +101,9 @@ def get_initials(name):
 
 @app.route("/")
 def home_page():
-    user = db_manager.get_user(1)
+    user = db_manager.get_user(2)
 
-    total_tests = len(db_manager.get_ab_tests())
+    total_tests = len(db_manager.get_ab_tests(user.company_id))
     total_variants = db_manager.get_all_variants()
     total_impressions = 0
     total_conversions = 0
@@ -112,9 +112,13 @@ def home_page():
         total_conversions += variant.conversions
 
     # Data for the most recent test
-    test = db_manager.get_recent_test()
-    variants = db_manager.get_variants(test[0].id)
-    report = db_manager.get_report(test[0].id)
+    test = db_manager.get_recent_test(user.company_id)
+    try:
+        variants = db_manager.get_variants(test.id)
+        report = db_manager.get_report(test.id)
+    except AttributeError:
+        variants = []
+        report = None
 
     for variant in variants:
         variant.conversion_rate = round(float(variant.conversions) / float(variant.impressions) * 100, 2)
@@ -151,7 +155,7 @@ def home_page_create_variant(user_id, test_id):
 @app.route("/tests/<int:user_id>")
 def tests_page(user_id):
     user = db_manager.get_user(user_id)
-    tests = db_manager.get_ab_tests()
+    tests = db_manager.get_ab_tests(user.company_id)
     variants = db_manager.get_all_variants()
     reports = db_manager.get_all_reports()
 
