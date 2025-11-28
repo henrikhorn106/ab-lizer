@@ -117,12 +117,12 @@ class DBManager:
         user.email = email
         db.session.commit()
 
-    def update_company(self, company_id, name, year, audience, url):
+    def update_company(self, company_id, name, year, audience, website):
         company = companies.query.filter_by(id=company_id).first()
         company.name = name
         company.year = year
         company.audience = audience
-        company.url = url
+        company.website = website
         db.session.commit()
 
 

@@ -11,23 +11,25 @@ client = OpenAI()
 
 
 # noinspection PyTypeChecker
-def generate_ai_recommendation(data):
+def generate_ai_recommendation(data, company):
     response = client.responses.parse(
         model="gpt-5-mini",
         input=[
             {
                 "role": "system",
-                "content": """You are a Conversion Rate Optimization AI assistant.
+                "content": f"""You are a Conversion Rate Optimization AI assistant.
+                You're working for the following company:
+                {company}
                 
                 RULES:
-                1. Always give only the recommendation
-                2. Explain, why you made the decision
-                3. Suggest if the test variant should get rolled out or not
-                4. Use simple language
+                - Always give only the recommendation
+                - Explain, why you made the decision
+                - Suggest if the test variant should get rolled out or not
+                - Use simple language
+                
                 
                 EXAMPLE:
-                Variant B should get rolled out.
-                Variant B has a higher conversion rate (0.35% vs 0.20%), 
+                Variant B should get rolled out. Variant B has a higher conversion rate (0.35% vs 0.20%), 
                 an absolute uplift of 0.0015 (0.15 percentage points). 
                 The two-proportion z-test returns p = 0.0428 (< 0.05), 
                 and the 95% confidence interval for the uplift (0.0000486, 0.0029514) 
@@ -40,7 +42,7 @@ def generate_ai_recommendation(data):
             },
             {
                 "role": "user",
-                "content": f"""Give me a recommendation fot the following test:
+                "content": f"""Give me a recommendation for the following test:
                 {data}
                 """
             },

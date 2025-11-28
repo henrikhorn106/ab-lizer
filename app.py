@@ -20,7 +20,7 @@ from data.db_manager import DBManager
 from data.models import db
 from routes.ai import generate_ai_recommendation
 from routes.tests import tranform_data
-from utils.significance_calculator import two_proportion_z_test
+from utils.utils import two_proportion_z_test
 
 app = Flask(__name__)
 
@@ -35,6 +35,7 @@ db_manager = DBManager()
 
 # =================================================================
 # HELPER FUNCTIONS
+# Having utils.py or helper.py script that gets imported here would be better
 # =================================================================
 
 def create_test(user_id):
@@ -68,23 +69,31 @@ def create_variant(test_id, company_id):
 
 def create_report(test_id, company_id, impressions_a, conversions_a, impressions_b, conversions_b):
     # Calculate significance
-    data = two_proportion_z_test(
+    report_data = two_proportion_z_test(
         int(impressions_a),
         int(conversions_a),
         int(impressions_b),
         int(conversions_b)
     )
 
-    if data["significant"]:
+    if report_data["significant"]:
         summary = "Test was significant."
     else:
         summary = "Test was not significant."
 
     test = db_manager.get_test(test_id, company_id)
-    tranform_data(test, db_manager.get_variants(test.id), data)
-    ai_recommendation = generate_ai_recommendation(data)
+    tranform_data(test, db_manager.get_variants(test.id), report_data)
 
-    db_manager.create_report(test_id, summary, round(data["p_value"], 2), data["significant"], ai_recommendation)
+    company = db_manager.get_company(company_id)
+    company_data = {
+        "name": company.name,
+        "audience": company.audience,
+        "year": company.year
+    }
+
+    ai_recommendation = generate_ai_recommendation(report_data, company_data)
+
+    db_manager.create_report(test_id, summary, round(report_data["p_value"], 2), report_data["significant"], ai_recommendation)
 
 
 @app.template_filter('initials')
@@ -107,7 +116,7 @@ def get_initials(name):
 
 @app.route("/")
 def home_page():
-    user = db_manager.get_user(1)
+    user = db_manager.get_user(2)
 
     total_tests = len(db_manager.get_ab_tests(user.company_id))
     total_variants = db_manager.get_all_variants(user.company_id)
@@ -260,8 +269,8 @@ def update_company(user_id ,company_id):
     name = request.form.get("company_name")
     year = request.form.get("year")
     audience = request.form.get("audience")
-    url = request.form.get("url")
-    db_manager.update_company(company_id, name, year, audience, url)
+    website = request.form.get("website")
+    db_manager.update_company(company_id, name, year, audience, website)
 
     return redirect(url_for("settings", user_id=user_id))
 
