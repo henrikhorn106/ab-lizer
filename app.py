@@ -18,7 +18,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 
 from data.db_manager import DBManager
 from data.models import db
-from routes.ai import generate_ai_recommendation, generate_ai_summary
+from routes.ai import generate_ai_recommendation, generate_ai_summary, generate_test_description
 from utils.utils import two_proportion_z_test, transform_test_data, calculate_increase_percent
 
 app = Flask(__name__)
@@ -155,7 +155,7 @@ def home_page_create_variant(user_id, test_id):
     # Create report
     db_manager.create_report(test_id,
                              summary=ai_summary,
-                             p_value=round(report_data["p_value"], 2),
+                             p_value=round(report_data["p_value"], 3),
                              significance=report_data["significant"],
                              increase_percent=increase_percent,
                              ai_recommendation=ai_recommendation)
@@ -388,7 +388,7 @@ def edit_test_page_update_variant(user_id, test_id):
     report = db_manager.get_report(test_id)
     db_manager.update_report(report.id,
                              summary=ai_summary,
-                             p_value=round(report_data["p_value"], 2),
+                             p_value=round(report_data["p_value"], 3),
                              significance=report_data["significant"],
                              increase_percent=increase_percent,
                              ai_recommendation=ai_recommendation)
@@ -461,6 +461,25 @@ def get_test_ratios(company_id):
         "losing_percent": round((losing / total) * 100, 1),
         "other_percent": round((other / total) * 100, 1)
     })
+
+
+@app.route("/api/generate-description", methods=["POST"])
+def generate_description_api():
+    """
+    Generate an AI-powered description for an AB test based on its name.
+    """
+    data = request.get_json()
+    test_name = data.get("test_name", "")
+
+    if not test_name:
+        return jsonify({"error": "Test name is required"}), 400
+
+    try:
+        description = generate_test_description(test_name)
+        return jsonify({"description": description})
+    except Exception as e:
+        print(f"Error generating description: {str(e)}")
+        return jsonify({"error": "Failed to generate description"}), 500
 
 
 # =================================================================

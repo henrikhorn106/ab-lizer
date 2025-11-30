@@ -395,7 +395,8 @@ input[type="text"] {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
+    align-content: flex-start;
 }
 
 .row h3 {
@@ -557,6 +558,53 @@ textarea {
 
 .btn-secondary:hover {
     background-color: #5a6268;
+}
+
+.btn-ai {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-ai:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-ai:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-ai svg {
+    animation: rotate 2s linear infinite;
+}
+
+.btn-ai:disabled svg {
+    animation: none;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.input-with-button {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-with-button textarea {
+    flex: 1;
+    width: 100%;
 }
 
 .btn-danger {

@@ -102,3 +102,50 @@ def generate_ai_summary(recommendation):
     print("AI summary generated!")
 
     return response.output_text
+
+
+def generate_test_description(test_name):
+    """
+    Generate an AB test description based on the test name using AI.
+
+    Args:
+        test_name: The name of the AB test
+
+    Returns:
+        A concise description of the test
+    """
+    print(f"Generating description for test: {test_name}")
+
+    system_prompt = """You are an AB Testing assistant that helps create clear and concise test descriptions.
+
+    RULES:
+    - Generate a 1-2 sentence description based on the test name
+    - Focus on what is being tested and why
+    - Keep it professional and actionable
+    - Maximum 200 characters
+    - Do not include special formatting or quotes
+
+    EXAMPLE:
+    Test Name: "Checkout Button Color"
+    Description: Testing the impact of button color on checkout completion rates. Comparing blue vs green CTA button to optimize conversions.
+    """
+
+    user_prompt = f"""Generate a clear description for an AB test with this name: {test_name}"""
+
+    response = client.responses.parse(
+        model="gpt-5-mini",
+        input=[
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {
+                "role": "user",
+                "content": user_prompt
+            },
+        ]
+    )
+
+    print("Test description generated!")
+
+    return response.output_text
