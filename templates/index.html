@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block page_title %}Dashboard{% endblock %}
 {% block page_button %}
-    <button class="btn" id="addTestBtn">Add AB Test</button>{% endblock %}
+    <div class="button-container">
+        <button class="btn" id="addTestBtn">Add AB Test</button>
+    </div>
+{% endblock %}
 {% block content %}
 
     <div class="column-grid-2">
-        <div class="col">
+        <div class="row">
             <div class="column-grid-3">
                 <div class="card gradient">
                     <h2 class="card-title">Total Tests</h2>
@@ -87,7 +90,7 @@
 
 
         </div>
-        <div class="col">
+        <div class="row-grid-2">
             <div class="card big">
                 <h2>Test Ratio</h2>
                 <div class="chart-container" data-company-id="{{ user.company_id }}">

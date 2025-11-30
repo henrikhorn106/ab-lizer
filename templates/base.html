@@ -30,12 +30,8 @@
         <nav>
             <div class="container navigation">
                 <div class="hero">
-                    <div>
-                        <h1>{% block page_title %}{% endblock %}</h1>
-                    </div>
-                    <div class="button-container">
-                        {% block page_button %}{% endblock %}
-                    </div>
+                    <h1>{% block page_title %}{% endblock %}</h1>
+                    {% block page_button %}{% endblock %}
                 </div>
                 <div class="col-wrapper">
                     <div class="profile">
@@ -49,7 +45,7 @@
                             {{ user.email }}
                         </div>
                     </div>
-                </div>
+
             </div>
         </nav>
         <main class="container">
