@@ -18,9 +18,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 
 from data.db_manager import DBManager
 from data.models import db
-from routes.ai import generate_ai_recommendation
-from routes.tests import tranform_data
-from utils.utils import two_proportion_z_test
+from routes.ai import generate_ai_recommendation, generate_ai_summary
+from utils.utils import two_proportion_z_test, transform_test_data
 
 app = Flask(__name__)
 
@@ -37,64 +36,6 @@ db_manager = DBManager()
 # HELPER FUNCTIONS
 # Having utils.py or helper.py script that gets imported here would be better
 # =================================================================
-
-def create_test(user_id):
-    company = db_manager.get_company(user_id)
-
-    name = request.form.get("name")
-    description = request.form.get("description")
-    metric = request.form.get("metric")
-
-    db_manager.create_ab_test(company.id, name, description, metric)
-
-
-def create_variant(test_id, company_id):
-
-    # Variant A
-    name = "Variant A"
-    impressions_a = request.form.get("var1_impressions")
-    conversions_a = request.form.get("var1_conversions")
-    conversion_rate = round(float(conversions_a) / float(impressions_a) * 100, 2)
-    db_manager.create_variant(test_id, name, impressions_a, conversions_a, conversion_rate)
-
-    # Variant B
-    name = "Variant B"
-    impressions_b = request.form.get("var2_impressions")
-    conversions_b = request.form.get("var2_conversions")
-    conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
-    db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
-
-    create_report(test_id, company_id, impressions_a, conversions_a, impressions_b, conversions_b)
-
-
-def create_report(test_id, company_id, impressions_a, conversions_a, impressions_b, conversions_b):
-    # Calculate significance
-    report_data = two_proportion_z_test(
-        int(impressions_a),
-        int(conversions_a),
-        int(impressions_b),
-        int(conversions_b)
-    )
-
-    if report_data["significant"]:
-        summary = "Test was significant."
-    else:
-        summary = "Test was not significant."
-
-    test = db_manager.get_test(test_id, company_id)
-    tranform_data(test, db_manager.get_variants(test.id), report_data)
-
-    company = db_manager.get_company(company_id)
-    company_data = {
-        "name": company.name,
-        "audience": company.audience,
-        "year": company.year
-    }
-
-    ai_recommendation = generate_ai_recommendation(report_data, company_data)
-
-    db_manager.create_report(test_id, summary, round(report_data["p_value"], 2), report_data["significant"], ai_recommendation)
-
 
 @app.template_filter('initials')
 def get_initials(name):
@@ -116,7 +57,7 @@ def get_initials(name):
 
 @app.route("/")
 def home_page():
-    user = db_manager.get_user(2)
+    user = db_manager.get_user(1)
 
     total_tests = len(db_manager.get_ab_tests(user.company_id))
     total_variants = db_manager.get_all_variants(user.company_id)
@@ -151,15 +92,67 @@ def home_page():
 
 @app.route("/home/<int:user_id>", methods=["POST"])
 def home_page_create_test(user_id):
-    create_test(user_id)
+    company = db_manager.get_company(user_id)
+
+    name = request.form.get("name")
+    description = request.form.get("description")
+    metric = request.form.get("metric")
+
+    db_manager.create_ab_test(company.id, name, description, metric)
 
     return redirect(url_for("home_page", user_id=user_id))
 
 
 @app.route("/home/variants/<int:user_id>/<int:test_id>", methods=["POST"])
 def home_page_create_variant(user_id, test_id):
-    company_id = db_manager.get_company(user_id).id
-    create_variant(test_id, company_id)
+
+    # Create Variant A
+    name = "Variant A"
+    impressions_a = request.form.get("var1_impressions")
+    conversions_a = request.form.get("var1_conversions")
+    conversion_rate = round(float(conversions_a) / float(impressions_a) * 100, 2)
+    db_manager.create_variant(test_id, name, impressions_a, conversions_a, conversion_rate)
+
+    # Create Variant B
+    name = "Variant B"
+    impressions_b = request.form.get("var2_impressions")
+    conversions_b = request.form.get("var2_conversions")
+    conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
+    db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
+
+    # Calculate significance
+    report_data = two_proportion_z_test(
+        int(impressions_a),
+        int(conversions_a),
+        int(impressions_b),
+        int(conversions_b)
+    )
+
+
+    # Transform data for AI
+
+    # 1. Company data
+    company = db_manager.get_company(user_id)
+    company_data = {
+        "name": company.name,
+        "audience": company.audience,
+        "year": company.year
+    }
+    # 2. Test data
+    test_data = db_manager.get_test(test_id, company.id)
+    transform_test_data(test_data, db_manager.get_variants(test_id), report_data)
+
+    # 3. Report data
+    ai_recommendation = generate_ai_recommendation(report_data, company_data)
+    ai_summary = generate_ai_summary(ai_recommendation)
+
+
+    # Create report
+    db_manager.create_report(test_id,
+                             summary=ai_summary,
+                             p_value=round(report_data["p_value"], 2),
+                             significance=report_data["significant"],
+                             ai_recommendation=ai_recommendation)
 
     return redirect(url_for("home_page", user_id=user_id))
 
@@ -185,7 +178,13 @@ def tests_page(user_id):
 
 @app.route("/tests/<int:user_id>", methods=["POST"])
 def tests_page_create_test(user_id):
-    create_test(user_id)
+    company = db_manager.get_company(user_id)
+
+    name = request.form.get("name")
+    description = request.form.get("description")
+    metric = request.form.get("metric")
+
+    db_manager.create_ab_test(company.id, name, description, metric)
 
     return redirect(url_for("tests_page", user_id=user_id))
 
@@ -199,37 +198,52 @@ def tests_page_delete_test(user_id, test_id):
 
 @app.route("/tests/variants/<int:user_id>/<int:test_id>", methods=["POST"])
 def tests_page_create_variant(user_id, test_id):
-    create_variant(test_id)
+
+    # Create Variant A
+    name = "Variant A"
+    impressions_a = request.form.get("var1_impressions")
+    conversions_a = request.form.get("var1_conversions")
+    conversion_rate = round(float(conversions_a) / float(impressions_a) * 100, 2)
+    db_manager.create_variant(test_id, name, impressions_a, conversions_a, conversion_rate)
+
+    # Create Variant B
+    name = "Variant B"
+    impressions_b = request.form.get("var2_impressions")
+    conversions_b = request.form.get("var2_conversions")
+    conversion_rate = round(float(conversions_b) / float(impressions_b) * 100, 2)
+    db_manager.create_variant(test_id, name, impressions_b, conversions_b, conversion_rate)
 
     return redirect(url_for("tests_page", user_id=user_id))
 
+
 # =================================================================
-# DETAILED TEST PAGE
+# EDIT TEST PAGE
 # =================================================================
-@app.route("/detailed/<int:user_id>/<int:test_id>")
-def detailed_test_page(user_id, test_id):
+
+@app.route("/edit/<int:user_id>/<int:test_id>")
+def edit_test_page(user_id, test_id):
     user = db_manager.get_user(user_id)
     test = db_manager.get_test(test_id, user.company_id)
     variants = db_manager.get_variants(test_id)
     report = db_manager.get_report(test_id)
 
-    return render_template("detail.html", user=user, test=test, variants=variants, report=report)
+    return render_template("edit.html", user=user, test=test, variants=variants, report=report)
 
 
-@app.route("/detailed/<int:user_id>/<int:test_id>", methods=["POST"])
-def detailed_test_page_update_variant(user_id, test_id):
+@app.route("/edit/<int:user_id>/<int:test_id>", methods=["POST"])
+def edit_test_page_update_variant(user_id, test_id):
     # Update test
     name = request.form.get("name")
     description = request.form.get("description")
     metric = request.form.get("metric")
     db_manager.update_ab_test(test_id, name, description, metric)
 
-    # Update variants (mehrere auf einmal)
+    # Update variants (multiple at once)
     variant_ids = request.form.getlist("variant_id[]")
     sessions_list = request.form.getlist("sessions[]")
     conversions_list = request.form.getlist("conversions[]")
 
-    # Durch alle Varianten iterieren
+    # Iterate through variant_ids and update their impressions and conversions
     for i in range(len(variant_ids)):
         variant_id = variant_ids[i]
         impressions = sessions_list[i]
@@ -237,7 +251,47 @@ def detailed_test_page_update_variant(user_id, test_id):
         conversion_rate = round(float(conversions) / float(impressions) * 100, 2)
         db_manager.update_variant(variant_id, impressions, conversions, conversion_rate)
 
-    return redirect(url_for("detailed_test_page", user_id=user_id, test_id=test_id))
+    # Get variant data
+    variants = db_manager.get_variants(test_id)
+    impressions_a = variants[0].impressions
+    conversions_a = variants[0].conversions
+    impressions_b = variants[1].impressions
+    conversions_b = variants[1].conversions
+
+    # Calculate significance
+    report_data = two_proportion_z_test(
+        int(impressions_a),
+        int(conversions_a),
+        int(impressions_b),
+        int(conversions_b)
+    )
+
+    # Transform data for AI
+
+    # 1. Company data
+    company = db_manager.get_company(user_id)
+    company_data = {
+        "name": company.name,
+        "audience": company.audience,
+        "year": company.year
+    }
+    # 2. Test data
+    test_data = db_manager.get_test(test_id, company.id)
+    transform_test_data(test_data, db_manager.get_variants(test_id), report_data)
+
+    # 3. Report data
+    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data)
+    ai_summary = generate_ai_summary(ai_recommendation)
+
+    # Create report
+    report = db_manager.get_report(test_id)
+    db_manager.update_report(report.id,
+                             summary=ai_summary,
+                             p_value=round(report_data["p_value"], 2),
+                             significance=report_data["significant"],
+                             ai_recommendation=ai_recommendation)
+
+    return redirect(url_for("edit_test_page", user_id=user_id, test_id=test_id))
 
 
 # =================================================================

@@ -29,9 +29,9 @@ class DBManager:
     def create_report(self, test_id, summary, p_value,significance, ai_recommendation):
         report = reports(
             test_id=test_id,
+            summary=summary,
             p_value=p_value,
             significance=significance,
-            summary=summary,
             ai_recommendation=ai_recommendation,
             created_at=db.func.now()
         )
@@ -105,10 +105,12 @@ class DBManager:
         variant.conversion_rate = conversion_rate
         db.session.commit()
 
-    def update_report(self, report_id, summary, significance, ai_recommendation):
+    def update_report(self, report_id, summary, p_value,significance, ai_recommendation):
         report = reports.query.filter_by(id=report_id).first()
         report.summary = summary
+        report.p_value = p_value
         report.significance = significance
+        report.ai_recommendation = ai_recommendation
         db.session.commit()
 
     def update_user(self, user_id, name, email):

@@ -44,3 +44,26 @@ def two_proportion_z_test(imp_a, conv_a, imp_b, conv_b, alpha=0.05):
         "method": "two_proportion_z_test",
         "significant": float(p_value) < alpha
     }
+
+
+def transform_test_data(test, variants, report):
+    string = f"""
+    Test Name: {test.name}
+    Test Description: {test.description}
+    Metric: {test.metric}
+
+    Vartiant A:
+    Impressions: {variants[0].impressions}
+    Conversions: {variants[0].conversions}
+    Conversion Rate: {variants[0].conversion_rate}
+
+    Vartiant B:
+    Impressions: {variants[1].impressions}
+    Conversions: {variants[1].conversions}
+    Conversion Rate: {variants[1].conversion_rate}
+
+    Report:
+    {report}
+"""
+
+    return string
