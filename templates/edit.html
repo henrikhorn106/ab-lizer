@@ -8,50 +8,43 @@
 {% block content %}
 
     <div class="card big">
-        <form class="details-form" id="edit-form" method="post" action="">
-            <input type="text" class="details-head" name="name" value="{{ test.name }}">
-            <input type="text" name="description" value="{{ test.description }}">
-            <div class="details-form-group">
-                <label for="metric">Main Metric:</label>
-                <input class="details-item" type="text" id="metric" name="metric" value="{{ test.metric }}">
+        <form id="edit-form" method="post" action="">
+
+            <div class="form-group">
+                <label class="details-label" for="name">Test Name:</label>
+                <input type="text" class="details-head" id="name" name="name" value="{{ test.name }}">
+            </div>
+
+            <div class="form-group">
+                <label class="details-label" for="description">Description:</label>
+                <textarea class="details-textarea" id="description" name="description"
+                          rows="6">{{ test.description }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="details-label" for="metric">Main Metric:</label>
+                <input type="text" id="metric" name="metric" value="{{ test.metric }}">
             </div>
 
             {% if variants != [] %}
                 <div class="column-grid-2">
                     {% for variant in variants %}
-                        <div class="test-card">
+                        <div class="metrics-card">
                             <input type="hidden" name="variant_id[]" value="{{ variant.id }}">
-                            <h3 class="details-name">{{ variant.name }}</h3>
+                            <h4>{{ variant.name }}</h4>
                             <div class="details-form-group">
-                                <label for="sessions_{{ loop.index }}"><strong>Sessions:</strong></label>
-                                <input class="details-item" type="text" id="sessions_{{ loop.index }}" name="sessions[]"
+                                <label class="details-label" for="sessions_{{ loop.index }}">Total Sessions:</label>
+                                <input class="details-input right" type="text" id="sessions_{{ loop.index }}"
+                                       name="sessions[]"
                                        value="{{ variant.impressions }}">
                             </div>
                             <div class="details-form-group">
-                                <label for="conversions_{{ loop.index }}"><strong>Conversions:</strong></label>
-                                <input class="details-item" type="text" id="conversions_{{ loop.index }}"
+                                <label class="details-label" for="conversions_{{ loop.index }}">Conversions:</label>
+                                <input class="details-input right" type="text" id="conversions_{{ loop.index }}"
                                        name="conversions[]" value="{{ variant.conversions }}">
                             </div>
                         </div>
                     {% endfor %}
-                </div>
-
-                <div class="column-grid-3">
-                    <div class="card secondary">
-                        <p><strong>Increase:</strong> {{ report.increase_percent }} %</p>
-                    </div>
-                    <div class="card secondary">
-                        <p><strong>p-Value:</strong> {{ report.p_value }}</p>
-                    </div>
-                    {% if report.significance %}
-                        <div class="card accent">
-                            <p><strong>Significant</strong></p>
-                        </div>
-                    {% else %}
-                        <div class="card secondary">
-                            <p><strong>Not Significant</strong></p>
-                        </div>
-                    {% endif %}
                 </div>
 
             {% else %}

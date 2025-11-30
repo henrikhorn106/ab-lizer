@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block page_title %}Analysis{% endblock %}
 {% block page_button %}
-    <a href="{{ url_for('edit_test_page', user_id=user.id, test_id=test.id) }}" class="btn">Edit Test</a>
+    <div class="button-container">
+        <a href="{{ url_for('edit_test_page', user_id=user.id, test_id=test.id) }}" class="btn">Edit Test</a>
+    </div>
 {% endblock %}
 {% block content %}
 
@@ -90,7 +92,7 @@
 
                     <h4>Detailed Recommendations</h4>
                     <div class="recommendation-text">
-                        {{ report.ai_recommendation | safe | replace('\n', '<br>') }}
+                        <p>{{ report.ai_recommendation }}</p>
                     </div>
                 </div>
             </div>
