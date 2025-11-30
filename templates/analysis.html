@@ -28,7 +28,7 @@
                 <div class="card secondary">
                     <h3 class="card-title">Performance Change</h3>
                     <p class="card-value {% if report.increase_percent > 0 %}positive{% elif report.increase_percent < 0 %}negative{% endif %}">
-                        {{ report.increase_percent }}%
+                        {{ report.increase_percent }} %
                     </p>
                 </div>
                 <div class="card secondary">
@@ -54,7 +54,7 @@
                             </div>
                             <div class="metric-row">
                                 <span class="metric-label">Conversion Rate:</span>
-                                <span class="metric-value highlight">{{ variant.conversion_rate }}%</span>
+                                <span class="metric-value highlight">{{ variant.conversion_rate }} %</span>
                             </div>
                         </div>
                     {% endfor %}
@@ -73,7 +73,7 @@
                                     <span>Sessions</span>
                                     <strong>{{ variant.impressions }}</strong>
                                 </div>
-                                <div class="funnel-stage" style="width: {{ variant.conversion_rate }}%;">
+                                <div class="funnel-stage" style="width: {{ variant.conversion_rate }} %;">
                                     <span>Conversions</span>
                                     <strong>{{ variant.conversions }}</strong>
                                 </div>
@@ -92,7 +92,12 @@
 
                     <h4>Detailed Recommendations</h4>
                     <div class="recommendation-text">
-                        <p>{{ report.ai_recommendation }}</p>
+                        {% set paragraphs = report.ai_recommendation.split('\n\n') %}
+                        {% for paragraph in paragraphs %}
+                            {% if paragraph.strip() %}
+                                <p>{{ paragraph.strip() }}</p>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -111,7 +116,7 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Overall Conversion Rate:</span>
-                        <span class="stat-value">{{ "%.2f"|format(analysis_data.total_conversions / analysis_data.total_sessions * 100) }}%</span>
+                        <span class="stat-value">{{ "%.2f"|format(analysis_data.total_conversions / analysis_data.total_sessions * 100) }} %</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Statistical Significance:</span>

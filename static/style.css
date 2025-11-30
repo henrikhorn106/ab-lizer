@@ -772,33 +772,6 @@ textarea {
     font-size: 18px;
 }
 
-.ai-section {
-    background: var(--primary);
-    color: var(--bg);
-}
-
-.ai-section h3,
-.ai-section h4 {
-    color: var(--bg);
-}
-
-.ai-content {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: var(--radius);
-    backdrop-filter: blur(10px);
-}
-
-.ai-content p,
-.ai-content .recommendation-text {
-    color: var(--bg);
-    line-height: 1.6;
-}
-
-.recommendation-text {
-    margin-top: 10px;
-}
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -822,4 +795,68 @@ textarea {
     color: var(--primary);
     font-size: 20px;
     font-weight: 600;
+}
+
+/* AI Recommendation Formatting - Dark Theme */
+.ai-section {
+    background: var(--primary);
+    color: var(--bg);
+}
+
+.ai-section h3,
+.ai-section h4 {
+    color: var(--bg);
+}
+
+.ai-content {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+    margin-top: 20px;
+}
+
+.ai-content h4 {
+    color: var(--bg);
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.ai-content h4:first-of-type {
+    margin-top: 0;
+}
+
+.ai-content p {
+    color: var(--bg);
+    line-height: 1.8;
+}
+
+.recommendation-text {
+    margin-top: 10px;
+}
+
+.recommendation-text p {
+    margin: 0 0 16px 0;
+    line-height: 1.8;
+    color: var(--bg);
+    text-align: justify;
+}
+
+.recommendation-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* Style bullet points in recommendation if present */
+.recommendation-text ul,
+.recommendation-text ol {
+    margin: 12px 0;
+    padding-left: 25px;
+    color: var(--bg);
+}
+
+.recommendation-text li {
+    margin: 8px 0;
+    line-height: 1.7;
+    color: var(--bg);
 }

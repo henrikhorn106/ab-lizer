@@ -15,6 +15,10 @@ def two_proportion_z_test(imp_a, conv_a, imp_b, conv_b, alpha=0.05):
         return {
             "conv_rate_a": conv_rate_a,
             "conv_rate_b": conv_rate_b,
+            "sample_size_a": imp_a,
+            "sample_size_b": imp_b,
+            "conversions_a": conv_a,
+            "conversions_b": conv_b,
             "p_value": p,
             "method": "fisher_exact",
             "significant": p < alpha,
@@ -36,6 +40,10 @@ def two_proportion_z_test(imp_a, conv_a, imp_b, conv_b, alpha=0.05):
     return {
         "conv_rate_a": conv_rate_a,
         "conv_rate_b": conv_rate_b,
+        "sample_size_a": imp_a,
+        "sample_size_b": imp_b,
+        "conversions_a": conv_a,
+        "conversions_b": conv_b,
         "difference": conv_rate_b - conv_rate_a,
         "p_value": float(p_value),
         "standard_deviation": standard_deviation,
@@ -66,23 +74,43 @@ def calculate_increase_percent(conv_rate_a, conv_rate_b):
 
 
 def transform_test_data(test, variants, report):
+    """
+    Transform test data into a formatted string representation.
+
+    Args:
+        test: The AB test object
+        variants: List of variant objects (should have exactly 2 variants)
+        report: The statistical report data dictionary
+
+    Returns:
+        Formatted string with test details, variant data, and statistical report
+    """
+    if len(variants) < 2:
+        return "Error: Test must have at least 2 variants"
+
+    # Extract variant data
+    variant_a = variants[0]
+    variant_b = variants[1]
+
+    # Build formatted string with proper alignment
     string = f"""
-    Test Name: {test.name}
-    Test Description: {test.description}
-    Metric: {test.metric}
+TEST DETAILS:
+Name: {test.name}
+Description: {test.description if test.description else 'No description provided'}
+Primary Metric: {test.metric}
 
-    Vartiant A:
-    Impressions: {variants[0].impressions}
-    Conversions: {variants[0].conversions}
-    Conversion Rate: {variants[0].conversion_rate}
+VARIANT A (Control):
+- Sample Size: {variant_a.impressions:,}
+- Conversions: {variant_a.conversions:,}
+- Conversion Rate: {variant_a.conversion_rate:.2%}
 
-    Vartiant B:
-    Impressions: {variants[1].impressions}
-    Conversions: {variants[1].conversions}
-    Conversion Rate: {variants[1].conversion_rate}
+VARIANT B (Treatment):
+- Sample Size: {variant_b.impressions:,}
+- Conversions: {variant_b.conversions:,}
+- Conversion Rate: {variant_b.conversion_rate:.2%}
 
-    Report:
-    {report}
+STATISTICAL REPORT:
+{report}
 """
 
     return string

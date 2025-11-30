@@ -15,39 +15,73 @@ client = OpenAI()
 def generate_ai_recommendation(test_data, report_data, company_data):
     print("Generating AI recommendation...")
 
-    system_prompt = \
-        f"""You are a Conversion Rate Optimization AI assistant.
-        You're working for the following company:
-        {company_data}
-        
-        This is the report for the test:
-        {report_data}
+    # Format statistical data clearly
+    method_name = report_data.get('method', 'statistical test')
+    ci_lower, ci_upper = report_data.get('ci_95', (None, None))
 
-        RULES:
-        - Always give only the recommendation
-        - Explain, why you made the decision
-        - Explain the user experience impact
-        - Suggest if the test variant should get rolled out or not
-        - Use simple language
+    system_prompt = f"""You are an expert Conversion Rate Optimization (CRO) consultant providing data-driven recommendations.
 
+COMPANY CONTEXT:
+- Company: {company_data.get('name', 'Unknown')}
+- Target Audience: {company_data.get('audience', 'General')}
+- Industry Context: {company_data.get('year', 'Current year')}
 
-        EXAMPLE:
-        Variant B should get rolled out. Variant B has a higher conversion rate (0.35% vs 0.20%), 
-        an absolute uplift of 0.0015 (0.15 percentage points). 
-        The two-proportion z-test returns p = 0.0428 (< 0.05), 
-        and the 95% confidence interval for the uplift (0.0000486, 0.0029514) 
-        is entirely positive, so the result is statistically 
-        significant and the effect is estimated to be above zero. 
-        The z-statistic (~2.025) and low variability support the 
-        reliability of this result. Suggestion: Yes, 
-        Variant B should be rolled out.
-        """
+YOUR TASK:
+Analyze the A/B test results and provide a clear, actionable recommendation. Your analysis must consider:
+1. Statistical significance and confidence
+2. Practical business impact
+3. Sample size adequacy
+4. Risk assessment
+5. User experience implications
 
-    user_prompt = \
-        f"""Give me a recommendation for the following test:
-        {test_data}
-        """
+OUTPUT FORMAT:
+Start with a clear decision (Roll out Variant B / Keep Variant A / Continue testing), then provide:
+- Statistical evidence (p-value, confidence intervals, effect size)
+- Business impact assessment (conversion lift, expected impact)
+- Risk factors and considerations
+- Actionable next steps
 
+GUIDELINES:
+- Use simple, clear language suitable for business stakeholders
+- Highlight both the statistical and practical significance
+- Consider the specific audience and industry context
+- Be cautious with borderline results (p-value 0.04-0.06)
+- Mention if sample size seems insufficient
+- Consider the magnitude of change, not just statistical significance
+- Use paragraphs and bullet points to organize your response
+- Add linebreaks after each topic
+- Don't use Headline style formatting
+"""
+
+    # Format test data more clearly
+    user_prompt = f"""Analyze this A/B test and provide your recommendation:
+
+TEST DETAILS:
+Test Name: {test_data.name}
+Description: {test_data.description if test_data.description else 'No description provided'}
+Primary Metric: {test_data.metric}
+
+STATISTICAL RESULTS:
+Method: {method_name}
+Statistical Significance: {'Yes (p < 0.05)' if report_data.get('significant') else 'No (p ≥ 0.05)'}
+P-value: {report_data.get('p_value', 'N/A'):.4f}
+Confidence Interval (95%): {f'[{ci_lower:.6f}, {ci_upper:.6f}]' if ci_lower is not None and ci_upper is not None else 'N/A'}
+Effect Size: {report_data.get('difference', 0):.6f} ({(report_data.get('difference', 0) * 100):.2f} percentage points)
+Z-statistic: {report_data.get('standard_deviation', 'N/A')}
+
+VARIANT PERFORMANCE:
+Variant A (Control):
+- Sample Size: {report_data.get('sample_size_a', 'N/A'):,}
+- Conversions: {report_data.get('conversions_a', 'N/A'):,}
+- Conversion Rate: {report_data.get('conv_rate_a', 0):.4%}
+
+Variant B (Treatment):
+- Sample Size: {report_data.get('sample_size_b', 'N/A'):,}
+- Conversions: {report_data.get('conversions_b', 'N/A'):,}
+- Conversion Rate: {report_data.get('conv_rate_b', 0):.4%}
+- Relative Change: {((report_data.get('conv_rate_b', 0) - report_data.get('conv_rate_a', 0)) / report_data.get('conv_rate_a', 1) * 100):.2f}%
+
+Provide your recommendation now."""
 
     response = client.responses.parse(
         model="gpt-5-mini",
@@ -70,20 +104,34 @@ def generate_ai_recommendation(test_data, report_data, company_data):
 
 def generate_ai_summary(recommendation):
     print("Generating AI summary...")
-    system_prompt = \
-        f"""You are a Summery AI assistant.
 
-            RULES:
-            - Give a short summary of the recommendation
-            - 500 characters max
-            
-            EXAMPLE:
-            Variant B showed a 26.6% increase in CTR (6.33% vs 5.0%). The result is statistically significant with p-value = 0.032.
-        """
+    system_prompt = """You are an expert at creating concise, actionable executive summaries for A/B test results.
 
-    user_prompt = \
-        f"""Generate a summary of the following recommendation:
-        {recommendation}"""
+YOUR TASK:
+Extract and summarize the most critical information from the detailed recommendation into a brief, scannable format.
+
+OUTPUT REQUIREMENTS:
+- Maximum 200 characters
+- Start with the clear decision (Roll out / Keep / Continue testing)
+- Include the key metric and percentage change
+- Mention statistical significance status
+- Use clear, direct language
+- No fluff or filler words
+
+FORMAT PATTERN:
+"[Decision]: [Metric] [changed by X%] ([old] → [new]). [Significance status with p-value]."
+
+EXAMPLES:
+"Roll out Variant B: Conversion rate increased by 15.3% (3.2% → 3.7%). Statistically significant (p=0.012)."
+"Keep Variant A: No significant difference detected (p=0.324). Variant B showed only 2.1% improvement."
+"Continue testing: Early positive signal (+8.7%) but not yet significant (p=0.089). Need more data."
+"""
+
+    user_prompt = f"""Create a concise executive summary from this recommendation:
+
+{recommendation}
+
+Summary:"""
 
     response = client.responses.parse(
         model="gpt-5-mini",
