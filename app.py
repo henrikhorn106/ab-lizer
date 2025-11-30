@@ -13,11 +13,13 @@ a connected database for test storage, and an AI layer that turns data into acti
 """
 
 import os
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 
 from data.db_manager import DBManager
-from data.models import db
+from data.models import db, users
 from routes.ai import generate_ai_recommendation, generate_ai_summary, generate_test_description
 from utils.utils import two_proportion_z_test, transform_test_data, calculate_increase_percent
 
@@ -26,10 +28,26 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'data/database.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 db.init_app(app)
 
 db_manager = DBManager()
+
+
+# =================================================================
+# AUTHENTICATION
+# =================================================================
+
+def login_required(f):
+    """Decorator to require login for protected routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # =================================================================
@@ -52,12 +70,92 @@ def get_initials(name):
 
 
 # =================================================================
+# LOGIN & REGISTRATION
+# =================================================================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Handle user login"""
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        # Get user by email
+        user = db.session.query(users).filter_by(email=email).first()
+
+        if user and user.password_hash and check_password_hash(user.password_hash, password):
+            # Login successful
+            session['user_id'] = user.id
+            session['user_name'] = user.name
+            flash('Login successful!', 'success')
+            return redirect(url_for('home_page'))
+        else:
+            flash('Invalid email or password', 'error')
+
+    return render_template("login.html")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """Handle user registration"""
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        company_name = request.form.get("company_name")
+        company_year = request.form.get("company_year")
+        company_audience = request.form.get("company_audience")
+        company_website = request.form.get("company_website")
+
+        # Check if user already exists
+        existing_user = db.session.query(users).filter_by(email=email).first()
+        if existing_user:
+            flash('Email already registered', 'error')
+            return redirect(url_for('register'))
+
+        # Create company first
+        company = db_manager.create_company(
+            name=company_name,
+            year=int(company_year),
+            audience=company_audience,
+            website=company_website
+        )
+
+        # Create user with hashed password
+        password_hash = generate_password_hash(password)
+
+        new_user = users(
+            name=name,
+            email=email,
+            password_hash=password_hash,
+            company_id=company.id
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template("register.html")
+
+
+@app.route("/logout")
+def logout():
+    """Handle user logout"""
+    session.clear()
+    flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('login'))
+
+
+# =================================================================
 # INDEX
 # =================================================================
 
 @app.route("/")
+@login_required
 def home_page():
-    user = db_manager.get_user(1)
+    user_id = session.get('user_id')
+    user = db_manager.get_user(user_id)
 
     total_tests = len(db_manager.get_ab_tests(user.company_id))
     total_variants = db_manager.get_all_variants(user.company_id)
@@ -77,7 +175,11 @@ def home_page():
         report = None
 
     for variant in variants:
-        variant.conversion_rate = round(float(variant.conversions) / float(variant.impressions) * 100, 2)
+        # avoid division by zero
+        if variant.impressions:
+            variant.conversion_rate = round(float(variant.conversions) / float(variant.impressions) * 100, 2)
+        else:
+            variant.conversion_rate = 0.0
 
     return render_template("index.html",
                            user=user,
@@ -91,8 +193,10 @@ def home_page():
 
 
 @app.route("/home/<int:user_id>", methods=["POST"])
+@login_required
 def home_page_create_test(user_id):
-    company = db_manager.get_company(user_id)
+    user = db_manager.get_user(user_id)
+    company = db_manager.get_company(user.company_id)
 
     name = request.form.get("name")
     description = request.form.get("description")
@@ -104,6 +208,7 @@ def home_page_create_test(user_id):
 
 
 @app.route("/home/variants/<int:user_id>/<int:test_id>", methods=["POST"])
+@login_required
 def home_page_create_variant(user_id, test_id):
 
     # Create Variant A
@@ -132,7 +237,8 @@ def home_page_create_variant(user_id, test_id):
     # Transform data for AI
 
     # 1. Company data
-    company = db_manager.get_company(user_id)
+    user = db_manager.get_user(user_id)
+    company = db_manager.get_company(user.company_id)
     company_data = {
         "name": company.name,
         "audience": company.audience,
@@ -168,6 +274,7 @@ def home_page_create_variant(user_id, test_id):
 # =================================================================
 
 @app.route("/tests/<int:user_id>")
+@login_required
 def tests_page(user_id):
     user = db_manager.get_user(user_id)
     tests = db_manager.get_ab_tests(user.company_id)
@@ -183,8 +290,10 @@ def tests_page(user_id):
 
 
 @app.route("/tests/<int:user_id>", methods=["POST"])
+@login_required
 def tests_page_create_test(user_id):
-    company = db_manager.get_company(user_id)
+    user = db_manager.get_user(user_id)
+    company = db_manager.get_company(user.company_id)
 
     name = request.form.get("name")
     description = request.form.get("description")
@@ -196,6 +305,7 @@ def tests_page_create_test(user_id):
 
 
 @app.route("/tests/<int:user_id>/<int:test_id>", methods=["POST"])
+@login_required
 def tests_page_delete_test(user_id, test_id):
     db_manager.delete_ab_test(test_id)
 
@@ -203,6 +313,7 @@ def tests_page_delete_test(user_id, test_id):
 
 
 @app.route("/tests/variants/<int:user_id>/<int:test_id>", methods=["POST"])
+@login_required
 def tests_page_create_variant(user_id, test_id):
 
     # Create Variant A
@@ -227,6 +338,7 @@ def tests_page_create_variant(user_id, test_id):
 # =================================================================
 
 @app.route("/analysis/<int:user_id>/<int:test_id>")
+@login_required
 def analysis_page(user_id, test_id):
     user = db_manager.get_user(user_id)
     test = db_manager.get_test(test_id, user.company_id)
@@ -237,26 +349,31 @@ def analysis_page(user_id, test_id):
     variants_data = []
     if variants and len(variants) >= 2:
         for variant in variants:
+            # guard conversion rate computation
+            if variant.impressions:
+                conversion_rate = variant.conversions / variant.impressions
+            else:
+                conversion_rate = 0.0
             variants_data.append({
                 'id': variant.id,
                 'name': variant.name,
                 'impressions': variant.impressions,
                 'conversions': variant.conversions,
-                'conversion_rate': variant.conversion_rate
+                'conversion_rate': conversion_rate
             })
 
         # Calculate relative uplift and other metrics
         variant_a = variants[0]
         variant_b = variants[1]
 
-        # Calculate conversion rates as decimals
-        conv_rate_a = variant_a.conversions / variant_a.impressions
-        conv_rate_b = variant_b.conversions / variant_b.impressions
+        # Calculate conversion rates as decimals with zero-division guards
+        conv_rate_a = (variant_a.conversions / variant_a.impressions) if variant_a.impressions else 0.0
+        conv_rate_b = (variant_b.conversions / variant_b.impressions) if variant_b.impressions else 0.0
 
         # Calculate standard errors for normal distribution
         import math
-        std_error_a = math.sqrt((conv_rate_a * (1 - conv_rate_a)) / variant_a.impressions)
-        std_error_b = math.sqrt((conv_rate_b * (1 - conv_rate_b)) / variant_b.impressions)
+        std_error_a = math.sqrt((conv_rate_a * (1 - conv_rate_a)) / variant_a.impressions) if variant_a.impressions else 0.0
+        std_error_b = math.sqrt((conv_rate_b * (1 - conv_rate_b)) / variant_b.impressions) if variant_b.impressions else 0.0
 
         # Calculate 95% confidence intervals
         z_score_95 = 1.96
@@ -316,6 +433,7 @@ def analysis_page(user_id, test_id):
 # =================================================================
 
 @app.route("/edit/<int:user_id>/<int:test_id>")
+@login_required
 def edit_test_page(user_id, test_id):
     user = db_manager.get_user(user_id)
     test = db_manager.get_test(test_id, user.company_id)
@@ -326,6 +444,7 @@ def edit_test_page(user_id, test_id):
 
 
 @app.route("/edit/<int:user_id>/<int:test_id>", methods=["POST"])
+@login_required
 def edit_test_page_update_variant(user_id, test_id):
     # Update test
     name = request.form.get("name")
@@ -364,7 +483,8 @@ def edit_test_page_update_variant(user_id, test_id):
     # Transform data for AI
 
     # 1. Company data
-    company = db_manager.get_company(user_id)
+    user = db_manager.get_user(user_id)
+    company = db_manager.get_company(user.company_id)
     company_data = {
         "name": company.name,
         "audience": company.audience,
@@ -487,6 +607,7 @@ def generate_description_api():
 # =================================================================
 
 @app.route("/settings/<int:user_id>")
+@login_required
 def settings(user_id):
     user = db_manager.get_user(user_id)
     company = db_manager.get_company(user.company_id)
@@ -498,6 +619,7 @@ def settings(user_id):
 
 
 @app.route("/settings/<int:user_id>", methods=["POST"])
+@login_required
 def update_user(user_id):
     name = request.form.get("name")
     email = request.form.get("email")
@@ -507,6 +629,7 @@ def update_user(user_id):
 
 
 @app.route("/settings/<int:user_id>/<int:company_id>", methods=["POST"])
+@login_required
 def update_company(user_id ,company_id):
     name = request.form.get("company_name")
     year = request.form.get("year")

@@ -54,7 +54,7 @@
                             <button class="btn" id="addVariantBtn">Add Variants</button>
                             <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
                                   class="inline-form" method="post">
-                                <button class="btn" onclick="return confirm('Delete this test?');" type="submit">
+                                <button class="btn btn-danger" onclick="return confirm('Delete this test?');" type="submit">
                                     Delete
                                 </button>
                             </form>

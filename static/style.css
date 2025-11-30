@@ -87,11 +87,14 @@ a {
     height: 100%;
 }
 
-.container.navigation, h1 {
-    margin-bottom: 0;
+.container.navigation {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.container.navigation h1 {
+    margin-bottom: 0;
 }
 
 .logo {

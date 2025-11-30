@@ -56,7 +56,12 @@ class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    password_hash = db.Column(db.String(255), nullable=True)  # Nullable for existing users
+
+    __repr__ = lambda self: f'<User {self.name}>'
+
+    __str__ = lambda self: f'{self.name} - {self.email}'
 
 
 class companies(db.Model):

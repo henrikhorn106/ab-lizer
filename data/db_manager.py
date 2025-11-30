@@ -46,14 +46,15 @@ class DBManager:
         db.session.add(user)
         db.session.commit()
 
-    def create_company(self, name, year, audience, url):
+    def create_company(self, name, year, audience, website):
         company = companies(
             name=name,
             year=year,
             audience=audience,
-            url=url)
+            website=website)
         db.session.add(company)
         db.session.commit()
+        return company
 
 
     # Read features
