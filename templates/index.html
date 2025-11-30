@@ -71,7 +71,7 @@
         <div class="col-2">
             <div class="card big">
                 <h2>Test Ratio</h2>
-                <div class="chart-container">
+                <div class="chart-container" data-company-id="{{ user.company_id }}">
                     <div class="pie hollow"></div>
                     <div class="legend">
                         <div class="legend-item">
@@ -187,6 +187,7 @@
     {% block scripts %}
         <script src="{{ url_for('static', filename='modal_test.js') }}"></script>
         <script src="{{ url_for('static', filename='modal_variant.js') }}"></script>
+        <script src="{{ url_for('static', filename='chart_updater.js') }}"></script>
     {% endblock %}
 
 {% endblock %}

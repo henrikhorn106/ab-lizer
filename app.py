@@ -14,7 +14,7 @@ a connected database for test storage, and an AI layer that turns data into acti
 
 import os
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
 from data.db_manager import DBManager
 from data.models import db
@@ -292,6 +292,73 @@ def edit_test_page_update_variant(user_id, test_id):
                              ai_recommendation=ai_recommendation)
 
     return redirect(url_for("edit_test_page", user_id=user_id, test_id=test_id))
+
+
+# =================================================================
+# API
+# =================================================================
+
+@app.route("/api/test-ratios/<int:company_id>")
+def get_test_ratios(company_id):
+    """
+    Calculate and return the ratio of winning, losing, and other tests.
+
+    Winning: significant AND conversion increased (Variant B > Variant A)
+    Losing: significant AND conversion decreased (Variant B < Variant A)
+    Other: not significant
+    """
+    tests = db_manager.get_ab_tests(company_id)
+
+    winning = 0
+    losing = 0
+    other = 0
+
+    for test in tests:
+        try:
+            report = db_manager.get_report(test.id)
+            variants = db_manager.get_variants(test.id)
+
+            # Skip if no report or not enough variants
+            if not report or len(variants) < 2:
+                other += 1
+                continue
+
+            # Check if significant
+            if report.significance:
+                # Compare conversion rates (Variant A is index 0, Variant B is index 1)
+                variant_a_rate = variants[0].conversion_rate
+                variant_b_rate = variants[1].conversion_rate
+
+                if variant_b_rate > variant_a_rate:
+                    winning += 1
+                else:
+                    losing += 1
+            else:
+                other += 1
+
+        except (AttributeError, IndexError):
+            other += 1
+
+    total = winning + losing + other
+
+    if total == 0:
+        return jsonify({
+            "winning": 0,
+            "losing": 0,
+            "other": 0,
+            "winning_percent": 0,
+            "losing_percent": 0,
+            "other_percent": 0
+        })
+
+    return jsonify({
+        "winning": winning,
+        "losing": losing,
+        "other": other,
+        "winning_percent": round((winning / total) * 100, 1),
+        "losing_percent": round((losing / total) * 100, 1),
+        "other_percent": round((other / total) * 100, 1)
+    })
 
 
 # =================================================================
