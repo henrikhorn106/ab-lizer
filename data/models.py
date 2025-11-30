@@ -41,6 +41,7 @@ class reports(db.Model):
     p_value = db.Column(db.Float, nullable=False)
     summary = db.Column(db.Text, nullable=False)
     significance = db.Column(db.Boolean, nullable=False)
+    increase_percent = db.Column(db.Float, nullable=True)
     ai_recommendation = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 

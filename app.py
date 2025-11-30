@@ -19,7 +19,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from data.db_manager import DBManager
 from data.models import db
 from routes.ai import generate_ai_recommendation, generate_ai_summary
-from utils.utils import two_proportion_z_test, transform_test_data
+from utils.utils import two_proportion_z_test, transform_test_data, calculate_increase_percent
 
 app = Flask(__name__)
 
@@ -143,15 +143,21 @@ def home_page_create_variant(user_id, test_id):
     transform_test_data(test_data, db_manager.get_variants(test_id), report_data)
 
     # 3. Report data
-    ai_recommendation = generate_ai_recommendation(report_data, company_data)
+    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data)
     ai_summary = generate_ai_summary(ai_recommendation)
 
+    # Calculate increase percentage
+    increase_percent = calculate_increase_percent(
+        report_data["conv_rate_a"],
+        report_data["conv_rate_b"]
+    )
 
     # Create report
     db_manager.create_report(test_id,
                              summary=ai_summary,
                              p_value=round(report_data["p_value"], 2),
                              significance=report_data["significant"],
+                             increase_percent=increase_percent,
                              ai_recommendation=ai_recommendation)
 
     return redirect(url_for("home_page", user_id=user_id))
@@ -283,12 +289,19 @@ def edit_test_page_update_variant(user_id, test_id):
     ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data)
     ai_summary = generate_ai_summary(ai_recommendation)
 
-    # Create report
+    # Calculate increase percentage
+    increase_percent = calculate_increase_percent(
+        report_data["conv_rate_a"],
+        report_data["conv_rate_b"]
+    )
+
+    # Update report
     report = db_manager.get_report(test_id)
     db_manager.update_report(report.id,
                              summary=ai_summary,
                              p_value=round(report_data["p_value"], 2),
                              significance=report_data["significant"],
+                             increase_percent=increase_percent,
                              ai_recommendation=ai_recommendation)
 
     return redirect(url_for("edit_test_page", user_id=user_id, test_id=test_id))
@@ -400,4 +413,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
 
-    app.run()
+    # app.run()

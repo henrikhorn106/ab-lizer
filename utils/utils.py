@@ -46,6 +46,25 @@ def two_proportion_z_test(imp_a, conv_a, imp_b, conv_b, alpha=0.05):
     }
 
 
+def calculate_increase_percent(conv_rate_a, conv_rate_b):
+    """
+    Calculate the percentage increase from variant A to variant B.
+
+    Args:
+        conv_rate_a: Conversion rate of variant A (as a decimal, e.g., 0.05 for 5%)
+        conv_rate_b: Conversion rate of variant B (as a decimal, e.g., 0.06 for 6%)
+
+    Returns:
+        The percentage increase (or decrease if negative) as a float.
+        Returns 0 if conv_rate_a is 0 to avoid division by zero.
+    """
+    if conv_rate_a == 0:
+        return 0.0
+
+    increase = ((conv_rate_b - conv_rate_a) / conv_rate_a) * 100
+    return round(increase, 2)
+
+
 def transform_test_data(test, variants, report):
     string = f"""
     Test Name: {test.name}
