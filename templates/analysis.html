@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block page_title %}Analysis{% endblock %}
+{% block page_button %}
+    <a href="{{ url_for('edit_test_page', user_id=user.id, test_id=test.id) }}" class="btn">Edit Test</a>
+{% endblock %}
+{% block content %}
+
+    <div class="analysis-container">
+        <!-- Test Overview Section -->
+        <div class="card big">
+            <h2>{{ test.name }}</h2>
+            <p>{{ test.description }}</p>
+            <p><strong>Main Metric:</strong> {{ test.metric }}</p>
+            <p><strong>Created:</strong> {{ test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A' }}</p>
+        </div>
+
+        {% if variants and variants | length >= 2 and report %}
+            <!-- Statistical Summary -->
+            <div class="column-grid-3">
+                <div class="card {% if report.significance %}gradient{% else %}secondary{% endif %}">
+                    <h3 class="card-title card-title-secondary">Result</h3>
+                    <p class="card-value">{{ 'Significant' if report.significance else 'Not Significant' }}</p>
+                </div>
+                <div class="card secondary">
+                    <h3 class="card-title">Performance Change</h3>
+                    <p class="card-value {% if report.increase_percent > 0 %}positive{% elif report.increase_percent < 0 %}negative{% endif %}">
+                        {{ report.increase_percent }}%
+                    </p>
+                </div>
+                <div class="card secondary">
+                    <h3 class="card-title">p-Value</h3>
+                    <p class="card-value">{{ report.p_value }}</p>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics -->
+            <div class="card big">
+                <h3>Detailed Metrics</h3>
+                <div class="column-grid-2">
+                    {% for variant in variants %}
+                        <div class="metrics-card">
+                            <h4>{{ variant.name }}</h4>
+                            <div class="metric-row">
+                                <span class="metric-label">Total Sessions:</span>
+                                <span class="metric-value">{{ variant.impressions }}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Total Conversions:</span>
+                                <span class="metric-value">{{ variant.conversions }}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Conversion Rate:</span>
+                                <span class="metric-value highlight">{{ variant.conversion_rate }}%</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Conversion Funnel Visualization -->
+            <div class="card big">
+                <h3>Conversion Funnel</h3>
+                <div class="column-grid-2">
+                    {% for variant in variants %}
+                        <div class="funnel-container">
+                            <h4>{{ variant.name }}</h4>
+                            <div class="funnel">
+                                <div class="funnel-stage" style="width: 100%;">
+                                    <span>Sessions</span>
+                                    <strong>{{ variant.impressions }}</strong>
+                                </div>
+                                <div class="funnel-stage" style="width: {{ variant.conversion_rate }}%;">
+                                    <span>Conversions</span>
+                                    <strong>{{ variant.conversions }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- AI Insights & Recommendations -->
+            <div class="card big ai-section">
+                <h3>AI Analysis & Recommendations</h3>
+                <div class="ai-content">
+                    <h4>Executive Summary</h4>
+                    <p>{{ report.summary }}</p>
+
+                    <h4>Detailed Recommendations</h4>
+                    <div class="recommendation-text">
+                        {{ report.ai_recommendation | safe | replace('\n', '<br>') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistical Details -->
+            <div class="card big">
+                <h3>Statistical Details</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Sessions:</span>
+                        <span class="stat-value">{{ analysis_data.total_sessions }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Conversions:</span>
+                        <span class="stat-value">{{ analysis_data.total_conversions }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Overall Conversion Rate:</span>
+                        <span class="stat-value">{{ "%.2f"|format(analysis_data.total_conversions / analysis_data.total_sessions * 100) }}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Statistical Significance:</span>
+                        <span class="stat-value">{{ 'Yes (p < 0.05)' if report.significance else 'No (p ≥ 0.05)' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variant Comparison Charts -->
+            <div class="column-grid-2">
+                <!-- Conversion Rate Comparison -->
+                <div class="card big">
+                    <h3>Conversion Rate Comparison</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="conversionRateChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sample Size Distribution -->
+                <div class="card big">
+                    <h3>Sample Size Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="sampleSizeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Normal Distribution Chart -->
+            <div class="card big">
+                <h3>Normal Distribution & Confidence Intervals</h3>
+                <p style="margin-bottom: 15px; opacity: 0.8;">This chart shows the probability distribution of conversion rates for both variants with 95% confidence intervals. The shaded areas represent the confidence intervals, and the curves show the expected distribution of conversion rates.</p>
+                <div class="chart-wrapper" style="height: 400px;">
+                    <canvas id="normalDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Q-Q Plot -->
+            <div class="card big">
+                <h3>Quantile-Quantile (Q-Q) Plot</h3>
+                <p style="margin-bottom: 15px; opacity: 0.8;">This plot helps assess if the data follows a normal distribution. Points that fall along the diagonal reference line indicate the data is normally distributed. Deviations from the line suggest departures from normality.</p>
+                <div class="chart-wrapper" style="height: 400px;">
+                    <canvas id="qqPlotChart"></canvas>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="card big">
+                <p>No variant data available for this test. Please add variants to see the analysis.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Prepare data for charts
+            const variantData = {{ variants_data | tojson }};
+            const reportData = {{ report_data | tojson }};
+            const analysisData = {{ analysis_data | tojson }};
+        </script>
+        <script src="{{ url_for('static', filename='analysis_charts.js') }}"></script>
+    {% endblock %}
+
+{% endblock %}

@@ -14,9 +14,6 @@
                 <div class="tab">Dashboard</div>
             </a>
             <a href="#">
-                <div class="tab">Analysis</div>
-            </a>
-            <a href="#">
                 <div class="tab">Reporting</div>
             </a>
             <a href="/tests/{{ user.id }}">
@@ -36,7 +33,7 @@
                     <div>
                         <h1>{% block page_title %}{% endblock %}</h1>
                     </div>
-                    <div>
+                    <div class="button-container">
                         {% block page_button %}{% endblock %}
                     </div>
                 </div>

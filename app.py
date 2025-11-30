@@ -223,6 +223,95 @@ def tests_page_create_variant(user_id, test_id):
 
 
 # =================================================================
+# ANALYSIS PAGE
+# =================================================================
+
+@app.route("/analysis/<int:user_id>/<int:test_id>")
+def analysis_page(user_id, test_id):
+    user = db_manager.get_user(user_id)
+    test = db_manager.get_test(test_id, user.company_id)
+    variants = db_manager.get_variants(test_id)
+    report = db_manager.get_report(test_id)
+
+    # Convert variants to dictionaries for JSON serialization
+    variants_data = []
+    if variants and len(variants) >= 2:
+        for variant in variants:
+            variants_data.append({
+                'id': variant.id,
+                'name': variant.name,
+                'impressions': variant.impressions,
+                'conversions': variant.conversions,
+                'conversion_rate': variant.conversion_rate
+            })
+
+        # Calculate relative uplift and other metrics
+        variant_a = variants[0]
+        variant_b = variants[1]
+
+        # Calculate conversion rates as decimals
+        conv_rate_a = variant_a.conversions / variant_a.impressions
+        conv_rate_b = variant_b.conversions / variant_b.impressions
+
+        # Calculate standard errors for normal distribution
+        import math
+        std_error_a = math.sqrt((conv_rate_a * (1 - conv_rate_a)) / variant_a.impressions)
+        std_error_b = math.sqrt((conv_rate_b * (1 - conv_rate_b)) / variant_b.impressions)
+
+        # Calculate 95% confidence intervals
+        z_score_95 = 1.96
+        ci_lower_a = max(0, conv_rate_a - z_score_95 * std_error_a)
+        ci_upper_a = min(1, conv_rate_a + z_score_95 * std_error_a)
+        ci_lower_b = max(0, conv_rate_b - z_score_95 * std_error_b)
+        ci_upper_b = min(1, conv_rate_b + z_score_95 * std_error_b)
+
+        # Additional analysis data
+        analysis_data = {
+            'total_sessions': variant_a.impressions + variant_b.impressions,
+            'total_conversions': variant_a.conversions + variant_b.conversions,
+            'variant_a_sample_size': variant_a.impressions,
+            'variant_b_sample_size': variant_b.impressions,
+            'distribution_data': {
+                'variant_a': {
+                    'mean': conv_rate_a,
+                    'std_error': std_error_a,
+                    'ci_lower': ci_lower_a,
+                    'ci_upper': ci_upper_a
+                },
+                'variant_b': {
+                    'mean': conv_rate_b,
+                    'std_error': std_error_b,
+                    'ci_lower': ci_lower_b,
+                    'ci_upper': ci_upper_b
+                }
+            }
+        }
+    else:
+        analysis_data = None
+
+    # Convert report to dictionary for JSON serialization
+    report_data = None
+    if report:
+        report_data = {
+            'id': report.id,
+            'p_value': report.p_value,
+            'significance': report.significance,
+            'increase_percent': report.increase_percent,
+            'summary': report.summary,
+            'ai_recommendation': report.ai_recommendation
+        }
+
+    return render_template("analysis.html",
+                           user=user,
+                           test=test,
+                           variants=variants,
+                           variants_data=variants_data,
+                           report=report,
+                           report_data=report_data,
+                           analysis_data=analysis_data)
+
+
+# =================================================================
 # EDIT TEST PAGE
 # =================================================================
 

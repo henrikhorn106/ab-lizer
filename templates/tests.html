@@ -3,27 +3,31 @@
 {% block page_button %}<button class="btn" id="addTestBtn">Add AB Test</button>{% endblock %}
 {% block content %}
 
-    <div class="card-list">
+    <div class="col">
         {% for test in tests %}
             <div class="card long">
-                <div class="card-header">
-                    <h2><strong>{{ test.name }}</strong></h2>
-                    {% for report in reports %}
-                        {% if report.test_id == test.id %}
-                            {% if report.significance %}
-                                <div class="tag gradient">
-                                    <p><strong>Significant</strong></p>
-                                </div>
-                            {% else %}
-                                <div class="tag secondary">
-                                    <p><strong>Not Significant</strong></p>
-                                </div>
+                <div class="col">
+                <div>
+                    <div class="card-header">
+                        <h2><strong>{{ test.name }}</strong></h2>
+                        {% for report in reports %}
+                            {% if report.test_id == test.id %}
+                                {% if report.significance %}
+                                    <div class="tag gradient">
+                                        <p><strong>Significant</strong></p>
+                                    </div>
+                                {% else %}
+                                    <div class="tag secondary">
+                                        <p><strong>Not Significant</strong></p>
+                                    </div>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
+                    <p>{{ test.description }}</p>
+                    <span><strong>Main Metric:</strong> {{ test.metric }}</span>
                 </div>
-                <p>{{ test.description }}</p>
-                <p><strong>Main Metric:</strong> {{ test.metric }}</p>
+                <div class="col">
                 {% set ns = namespace(counter = 0) %}
                 {% for variant in variants %}
                     {% if variant.test_id == test.id %}
@@ -38,6 +42,7 @@
                         {% set ns.counter = ns.counter + 1 %}
                     {% endif %}
                 {% endfor %}
+                </div>
                 {% if ns.counter == 0 %}
                     <div class="row">
                         <button class="btn" id="addVariantBtn">Add Variants</button>
@@ -98,17 +103,21 @@
                     </div>
                 {% else %}
                     <div class="row">
+                        <a href="{{ url_for('analysis_page', user_id=user.id, test_id=test.id) }}">
+                            <button class="btn" type="button">View Analysis</button>
+                        </a>
                         <a href="{{ url_for('edit_test_page', user_id=user.id, test_id=test.id) }}">
-                            <button class="btn" type="button" >Edit</button>
+                            <button class="btn btn-secondary" type="button" >Edit</button>
                         </a>
                         <form action="{{ url_for('tests_page_delete_test', user_id=user.id, test_id=test.id) }}"
                               class="inline-form" method="post">
-                            <button class="btn-danger" onclick="return confirm('Delete this test?');" type="submit">
+                            <button class="btn btn-danger" onclick="return confirm('Delete this test?');" type="submit">
                                 Delete
                             </button>
                         </form>
                     </div>
                 {% endif %}
+                </div>
             </div>
         {% endfor %}
     </div>

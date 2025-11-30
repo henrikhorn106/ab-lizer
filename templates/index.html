@@ -5,7 +5,7 @@
 {% block content %}
 
     <div class="column-grid-2">
-        <div class="col-1">
+        <div class="col">
             <div class="column-grid-3">
                 <div class="card gradient">
                     <h2 class="card-title">Total Tests</h2>
@@ -21,54 +21,73 @@
                 </div>
             </div>
             <div class="card big">
-                <h2>Recent Test Results</h2>
-                {% if test is not none %}
-                    <h3>{{ test.name }}</h3>
-                    <p>{{ test.description }}</p>
-                    <p><strong>Main Metric:</strong> {{ test.metric }}</p>
-
-                    {% if variants != [] %}
-                        <div class="column-grid-2">
-                            {% for variant in variants %}
-                                <div class="test-card">
-                                    <h3>{{ variant.name }}</h3>
-                                    <p><strong>Sessions:</strong> {{ variant.impressions }}</p>
-                                    <p><strong>Conversions:</strong> {{ variant.conversions }}</p>
-                                    <p><strong>Conversion Rates:</strong> {{ variant.conversion_rate }} %</p>
-                                </div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="column-grid-3">
-                            <div class="card secondary">
-                                <p><strong>Increase:</strong> {{ report.increase_percent }} %</p>
+                <div class="col">
+                    <div>
+                        <h2>Recent Test Results</h2>
+                        {% if test is not none %}
+                            <h3>{{ test.name }}</h3>
+                            <p>{{ test.description }}</p>
+                            <span><strong>Main Metric:</strong> {{ test.metric }}</span>
                             </div>
-                            <div class="card secondary">
-                                <p><strong>p-Value:</strong> {{ report.p_value }}</p>
-                            </div>
-                            {% if report.significance %}
-                                <div class="card gradient">
-                                    <p><strong>Significant</strong></p>
+
+                            {% if variants != [] %}
+                                <div class="column-grid-2">
+                                    {% for variant in variants %}
+                                        <div class="metrics-card">
+                                            <h4>{{ variant.name }}</h4>
+                                            <div class="metric-row">
+                                                <span class="metric-label">Total Sessions:</span>
+                                                <span class="metric-value">{{ variant.impressions }}</span>
+                                            </div>
+                                            <div class="metric-row">
+                                                <span class="metric-label">Total Conversions:</span>
+                                                <span class="metric-value">{{ variant.conversions }}</span>
+                                            </div>
+                                            <div class="metric-row">
+                                                <span class="metric-label">Conversion Rate:</span>
+                                                <span class="metric-value highlight">{{ variant.conversion_rate }}%</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
+
+                                <div class="column-grid-3">
+                                    <div class="card secondary">
+                                        <p><strong>Increase:</strong> {{ report.increase_percent }} %</p>
+                                    </div>
+                                    <div class="card secondary">
+                                        <p><strong>p-Value:</strong> {{ report.p_value }}</p>
+                                    </div>
+                                    {% if report.significance %}
+                                        <div class="card gradient">
+                                            <p><strong>Significant</strong></p>
+                                        </div>
+                                    {% else %}
+                                        <div class="card secondary">
+                                            <p><strong>Not Significant</strong></p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="button-container">
+                                    <a href="{{ url_for('analysis_page', user_id=user.id, test_id=test.id) }}"
+                                       class="btn">View Detailed Analysis</a>
+                                </div>
+
                             {% else %}
-                                <div class="card secondary">
-                                    <p><strong>Not Significant</strong></p>
+                                <div class="button-container">
+                                    <button class="btn" id="addVariantBtn">Add Variants</button>
                                 </div>
                             {% endif %}
-                        </div>
 
-                    {% else %}
-                        <button class="btn" id="addVariantBtn">Add Variants</button>
-                    {% endif %}
-
-                {% else %}
-                    <p>Create your first AB test to see the results.</p>
-                {% endif %}
+                        {% else %}
+                            <p>Create your first AB test to see the results.</p>
+                        {% endif %}
+                </div>
             </div>
 
 
         </div>
-        <div class="col-2">
+        <div class="col">
             <div class="card big">
                 <h2>Test Ratio</h2>
                 <div class="chart-container" data-company-id="{{ user.company_id }}">
