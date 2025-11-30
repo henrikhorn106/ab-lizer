@@ -10,8 +10,10 @@
         <div class="card big">
             <h2>{{ test.name }}</h2>
             <p>{{ test.description }}</p>
-            <p><strong>Main Metric:</strong> {{ test.metric }}</p>
-            <p><strong>Created:</strong> {{ test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A' }}</p>
+            <div class="col">
+                <span><strong>Main Metric:</strong> {{ test.metric }}</span>
+                <span><strong>Created:</strong> {{ test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A' }}</span>
+            </div>
         </div>
 
         {% if variants and variants | length >= 2 and report %}
@@ -138,7 +140,9 @@
             <!-- Normal Distribution Chart -->
             <div class="card big">
                 <h3>Normal Distribution & Confidence Intervals</h3>
-                <p style="margin-bottom: 15px; opacity: 0.8;">This chart shows the probability distribution of conversion rates for both variants with 95% confidence intervals. The shaded areas represent the confidence intervals, and the curves show the expected distribution of conversion rates.</p>
+                <p style="margin-bottom: 15px; opacity: 0.8;">This chart shows the probability distribution of
+                    conversion rates for both variants with 95% confidence intervals. The shaded areas represent the
+                    confidence intervals, and the curves show the expected distribution of conversion rates.</p>
                 <div class="chart-wrapper" style="height: 400px;">
                     <canvas id="normalDistributionChart"></canvas>
                 </div>
@@ -147,7 +151,9 @@
             <!-- Q-Q Plot -->
             <div class="card big">
                 <h3>Quantile-Quantile (Q-Q) Plot</h3>
-                <p style="margin-bottom: 15px; opacity: 0.8;">This plot helps assess if the data follows a normal distribution. Points that fall along the diagonal reference line indicate the data is normally distributed. Deviations from the line suggest departures from normality.</p>
+                <p style="margin-bottom: 15px; opacity: 0.8;">This plot helps assess if the data follows a normal
+                    distribution. Points that fall along the diagonal reference line indicate the data is normally
+                    distributed. Deviations from the line suggest departures from normality.</p>
                 <div class="chart-wrapper" style="height: 400px;">
                     <canvas id="qqPlotChart"></canvas>
                 </div>
