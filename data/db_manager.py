@@ -133,6 +133,7 @@ class DBManager:
     # Delete features
     def delete_ab_test(self, test_id):
         self.delete_all_variants(test_id)
+        self.delete_report(test_id)
         ab_tests.query.filter(ab_tests.id == test_id).delete()
         db.session.commit()
 
@@ -144,8 +145,8 @@ class DBManager:
         variants.query.filter(variants.test_id == test_id).delete()
         db.session.commit()
 
-    def delete_report(self, report_id):
-        reports.query.filter(reports.id == report_id).delete()
+    def delete_report(self, test_id):
+        reports.query.filter(reports.test_id == test_id).delete()
         db.session.commit()
 
     def delete_user(self, user_id):
