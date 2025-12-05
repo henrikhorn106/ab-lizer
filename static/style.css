@@ -863,3 +863,53 @@ textarea {
     line-height: 1.7;
     color: var(--bg);
 }
+
+/* Structured Recommendation Styles */
+.recommendation-decision {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    border-left: 4px solid var(--accent);
+}
+
+.recommendation-decision strong {
+    color: var(--bg);
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.recommendation-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.recommendation-topic {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.recommendation-topic:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-left-color: var(--accent);
+    transform: translateX(4px);
+}
+
+.recommendation-topic h5 {
+    color: var(--secondary);
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.recommendation-topic p {
+    color: var(--bg);
+    margin: 0;
+    line-height: 1.7;
+    opacity: 0.95;
+}

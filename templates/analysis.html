@@ -91,14 +91,32 @@
                     <p>{{ report.summary }}</p>
 
                     <h4>Detailed Recommendations</h4>
-                    <div class="recommendation-text">
-                        {% set paragraphs = report.ai_recommendation.split('\n\n') %}
-                        {% for paragraph in paragraphs %}
-                            {% if paragraph.strip() %}
-                                <p>{{ paragraph.strip() }}</p>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+
+                    {% if report.ai_recommendation is mapping %}
+                        <!-- Structured recommendation with decision and topics -->
+                        <div class="recommendation-decision">
+                            <strong>{{ report.ai_recommendation.decision }}</strong>
+                        </div>
+
+                        <div class="recommendation-topics">
+                            {% for topic in report.ai_recommendation.topics %}
+                                <div class="recommendation-topic">
+                                    <h5>{{ topic.title }}</h5>
+                                    <p>{{ topic.content }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Fallback for plain text recommendations -->
+                        <div class="recommendation-text">
+                            {% set paragraphs = report.ai_recommendation.split('\n\n') %}
+                            {% for paragraph in paragraphs %}
+                                {% if paragraph.strip() %}
+                                    <p>{{ paragraph.strip() }}</p>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 

@@ -1,6 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import json
 
 
 # Load .env file
@@ -27,34 +28,49 @@ COMPANY CONTEXT:
 - Industry Context: {company_data.get('year', 'Current year')}
 
 YOUR TASK:
-Analyze the A/B test results and provide a clear, actionable recommendation. Your analysis must consider:
-1. Statistical significance and confidence
-2. Practical business impact
-3. Sample size adequacy
-4. Risk assessment
-5. User experience implications
+Analyze the A/B test results and provide a clear, actionable recommendation structured into 5 distinct topics.
 
 OUTPUT FORMAT:
-Start with a clear decision (Roll out Variant B / Keep Variant A / Continue testing), then provide:
-- Statistical evidence (p-value, confidence intervals, effect size)
-- Business impact assessment (conversion lift, expected impact)
-- Risk factors and considerations
-- Actionable next steps
+You must return a valid JSON object with the following structure:
+{{
+  "decision": "Clear decision: Roll out Variant B / Keep Variant A / Continue testing",
+  "topics": [
+    {{
+      "title": "Statistical Significance & Confidence",
+      "content": "Analysis of p-value, confidence intervals, effect size, and statistical validity. 2-3 sentences."
+    }},
+    {{
+      "title": "Business Impact Assessment",
+      "content": "Practical business implications, conversion lift, revenue impact, and expected outcomes. 2-3 sentences."
+    }},
+    {{
+      "title": "Sample Size & Data Quality",
+      "content": "Evaluation of sample size adequacy, data collection quality, and statistical power. 2-3 sentences."
+    }},
+    {{
+      "title": "Risk Factors & Considerations",
+      "content": "Potential risks, limitations, edge cases, and factors to monitor. 2-3 sentences."
+    }},
+    {{
+      "title": "Next Steps & Action Items",
+      "content": "Concrete actionable recommendations and implementation guidance. 2-3 sentences."
+    }}
+  ]
+}}
 
 GUIDELINES:
 - Use simple, clear language suitable for business stakeholders
-- Highlight both the statistical and practical significance
+- Each topic content should be 2-3 sentences maximum
+- Highlight both statistical and practical significance
 - Consider the specific audience and industry context
 - Be cautious with borderline results (p-value 0.04-0.06)
 - Mention if sample size seems insufficient
 - Consider the magnitude of change, not just statistical significance
-- Use paragraphs and bullet points to organize your response
-- Add linebreaks after each topic
-- Don't use Headline style formatting
+- Return ONLY valid JSON, no additional text
 """
 
     # Format test data more clearly
-    user_prompt = f"""Analyze this A/B test and provide your recommendation:
+    user_prompt = f"""Analyze this A/B test and provide your recommendation in JSON format:
 
 TEST DETAILS:
 Test Name: {test_data.name}
@@ -81,7 +97,7 @@ Variant B (Treatment):
 - Conversion Rate: {report_data.get('conv_rate_b', 0):.4%}
 - Relative Change: {((report_data.get('conv_rate_b', 0) - report_data.get('conv_rate_a', 0)) / report_data.get('conv_rate_a', 1) * 100):.2f}%
 
-Provide your recommendation now."""
+Return your recommendation as a JSON object following the specified format."""
 
     response = client.responses.parse(
         model="gpt-5-mini",
@@ -99,11 +115,26 @@ Provide your recommendation now."""
 
     print("AI recommendation generated!")
 
-    return response.output_text
+    # Parse JSON response
+    try:
+        recommendation_data = json.loads(response.output_text)
+        return recommendation_data
+    except json.JSONDecodeError:
+        # Fallback to plain text if JSON parsing fails
+        print("Warning: Failed to parse JSON, returning plain text")
+        return {"decision": "Error parsing response", "topics": [{"title": "Response", "content": response.output_text}]}
 
 
 def generate_ai_summary(recommendation):
     print("Generating AI summary...")
+
+    # Format recommendation for summary generation
+    if isinstance(recommendation, dict):
+        # Convert structured recommendation to readable text
+        recommendation_text = f"{recommendation.get('decision', '')}\n\n"
+        for topic in recommendation.get('topics', []):
+            recommendation_text += f"{topic.get('title', '')}: {topic.get('content', '')}\n"
+        recommendation = recommendation_text
 
     system_prompt = """You are an expert at creating concise, actionable executive summaries for A/B test results.
 

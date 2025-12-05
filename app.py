@@ -13,6 +13,7 @@ a connected database for test storage, and an AI layer that turns data into acti
 """
 
 import os
+import json
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -258,13 +259,16 @@ def home_page_create_variant(user_id, test_id):
         report_data["conv_rate_b"]
     )
 
+    # Convert ai_recommendation dict to JSON string for database storage
+    ai_recommendation_json = json.dumps(ai_recommendation) if isinstance(ai_recommendation, dict) else ai_recommendation
+
     # Create report
     db_manager.create_report(test_id,
                              summary=ai_summary,
                              p_value=round(report_data["p_value"], 3),
                              significance=report_data["significant"],
                              increase_percent=increase_percent,
-                             ai_recommendation=ai_recommendation)
+                             ai_recommendation=ai_recommendation_json)
 
     return redirect(url_for("home_page", user_id=user_id))
 
@@ -345,6 +349,14 @@ def analysis_page(user_id, test_id):
     variants = db_manager.get_variants(test_id)
     report = db_manager.get_report(test_id)
 
+    # Parse ai_recommendation from JSON string to dict if needed
+    if report and isinstance(report.ai_recommendation, str):
+        try:
+            report.ai_recommendation = json.loads(report.ai_recommendation)
+        except json.JSONDecodeError:
+            # Keep as string if parsing fails (backward compatibility)
+            pass
+
     # Convert variants to dictionaries for JSON serialization
     variants_data = []
     if variants and len(variants) >= 2:
@@ -409,13 +421,22 @@ def analysis_page(user_id, test_id):
     # Convert report to dictionary for JSON serialization
     report_data = None
     if report:
+        # Parse ai_recommendation from JSON string to dict if needed
+        ai_recommendation = report.ai_recommendation
+        if isinstance(ai_recommendation, str):
+            try:
+                ai_recommendation = json.loads(ai_recommendation)
+            except json.JSONDecodeError:
+                # Keep as string if parsing fails (backward compatibility)
+                pass
+
         report_data = {
             'id': report.id,
             'p_value': report.p_value,
             'significance': report.significance,
             'increase_percent': report.increase_percent,
             'summary': report.summary,
-            'ai_recommendation': report.ai_recommendation
+            'ai_recommendation': ai_recommendation
         }
 
     return render_template("analysis.html",
@@ -504,6 +525,9 @@ def edit_test_page_update_variant(user_id, test_id):
         report_data["conv_rate_b"]
     )
 
+    # Convert ai_recommendation dict to JSON string for database storage
+    ai_recommendation_json = json.dumps(ai_recommendation) if isinstance(ai_recommendation, dict) else ai_recommendation
+
     # Update report
     report = db_manager.get_report(test_id)
     db_manager.update_report(report.id,
@@ -511,7 +535,7 @@ def edit_test_page_update_variant(user_id, test_id):
                              p_value=round(report_data["p_value"], 3),
                              significance=report_data["significant"],
                              increase_percent=increase_percent,
-                             ai_recommendation=ai_recommendation)
+                             ai_recommendation=ai_recommendation_json)
 
     return redirect(url_for("edit_test_page", user_id=user_id, test_id=test_id))
 
