@@ -2,9 +2,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import json
-from typing import TypedDict, Annotated
 from pydantic import BaseModel, Field
-from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 
 
@@ -35,45 +33,31 @@ class AIRecommendation(BaseModel):
         description="Clear decision: 'Roll out Variant B', 'Keep Variant A', or 'Continue testing'"
     )
     topics: list[RecommendationTopic] = Field(
-        description="Exactly 5 topics covering different aspects of the recommendation",
-        min_items=5,
-        max_items=5
+        description="Exactly 5 topics covering different aspects of the recommendation"
     )
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "decision": "Roll out Variant B",
-                "topics": [
-                    {
-                        "title": "Statistical Significance & Confidence",
-                        "content": "The test achieved statistical significance with p=0.023..."
-                    }
-                ]
-            }
-        }
+        # Additional validation
+        validate_assignment = True
 
 
 # ================================================================
-# LANGGRAPH STATE AND WORKFLOW
+# MAIN FUNCTION WITH STRUCTURED OUTPUT
 # ================================================================
 
-class RecommendationState(TypedDict):
-    """State for the recommendation generation workflow"""
-    test_data: dict
-    report_data: dict
-    company_data: dict
-    system_prompt: str
-    user_prompt: str
-    recommendation: dict | None
-    error: str | None
+def generate_ai_recommendation(test_data, report_data, company_data):
+    """
+    Generate AI recommendation using structured outputs.
 
+    Args:
+        test_data: AB test data object
+        report_data: Statistical report data dict
+        company_data: Company context data dict
 
-def prepare_prompts(state: RecommendationState) -> RecommendationState:
-    """Node: Prepare system and user prompts"""
-    company_data = state["company_data"]
-    test_data = state["test_data"]
-    report_data = state["report_data"]
+    Returns:
+        dict: Structured recommendation with decision and 5 topics
+    """
+    print("Generating AI recommendation with structured output...")
 
     # Format statistical data
     method_name = report_data.get('method', 'statistical test')
@@ -117,7 +101,7 @@ Primary Metric: {test_data.metric}
 STATISTICAL RESULTS:
 Method: {method_name}
 Statistical Significance: {'Yes (p < 0.05)' if report_data.get('significant') else 'No (p ≥ 0.05)'}
-P-value: {report_data.get('p_value', 'N/A'):.4f}
+P-value: {report_data.get('p_value', 0) if isinstance(report_data.get('p_value'), (int, float)) else 'N/A'}
 Confidence Interval (95%): {f'[{ci_lower:.6f}, {ci_upper:.6f}]' if ci_lower is not None and ci_upper is not None else 'N/A'}
 Effect Size: {report_data.get('difference', 0):.6f} ({(report_data.get('difference', 0) * 100):.2f} percentage points)
 Z-statistic: {report_data.get('standard_deviation', 'N/A')}
@@ -136,23 +120,14 @@ Variant B (Treatment):
 
 Provide your structured recommendation with exactly 5 topics."""
 
-    state["system_prompt"] = system_prompt
-    state["user_prompt"] = user_prompt
-    return state
-
-
-def generate_recommendation(state: RecommendationState) -> RecommendationState:
-    """Node: Generate AI recommendation using structured output"""
     try:
-        print("Generating AI recommendation with LangGraph...")
-
-        # Use structured output with Pydantic model
+        # Use LangChain's structured output
         llm_with_structure = llm.with_structured_output(AIRecommendation)
 
         # Generate recommendation
         response = llm_with_structure.invoke([
-            {"role": "system", "content": state["system_prompt"]},
-            {"role": "user", "content": state["user_prompt"]}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
         ])
 
         # Convert Pydantic model to dict
@@ -167,119 +142,75 @@ def generate_recommendation(state: RecommendationState) -> RecommendationState:
             ]
         }
 
-        state["recommendation"] = recommendation_dict
-        state["error"] = None
+        # Validate we have exactly 5 topics
+        if len(recommendation_dict["topics"]) != 5:
+            recommendation_dict["topics"] = _ensure_five_topics(recommendation_dict["topics"])
+
         print("AI recommendation generated successfully!")
+        return recommendation_dict
 
     except Exception as e:
         print(f"Error generating recommendation: {str(e)}")
-        state["error"] = str(e)
-        # Fallback recommendation
-        state["recommendation"] = {
+        # Fallback recommendation with safe attribute access
+        test_name = getattr(test_data, 'name', 'Unknown Test')
+        sample_a = report_data.get('sample_size_a', 0)
+        sample_b = report_data.get('sample_size_b', 0)
+        p_val = report_data.get('p_value', 'N/A')
+        significance = 'Yes' if report_data.get('significant') else 'No'
+
+        return {
             "decision": "Error generating recommendation",
             "topics": [
                 {
                     "title": "Error",
-                    "content": f"Failed to generate recommendation: {str(e)}"
+                    "content": f"Failed to generate recommendation: {str(e)[:100]}"
+                },
+                {
+                    "title": "Fallback Analysis",
+                    "content": "Please review the test results manually or try regenerating the report."
+                },
+                {
+                    "title": "Data Available",
+                    "content": f"Test '{test_name}' comparing {sample_a:,} vs {sample_b:,} samples."
+                },
+                {
+                    "title": "Statistical Result",
+                    "content": f"P-value: {p_val}, Statistical Significance: {significance}"
+                },
+                {
+                    "title": "Next Steps",
+                    "content": "Contact support if this error persists or check your API configuration."
                 }
             ]
         }
 
-    return state
 
+def _ensure_five_topics(topics: list) -> list:
+    """Ensure exactly 5 topics by padding or trimming"""
+    default_titles = [
+        "Statistical Significance & Confidence",
+        "Business Impact Assessment",
+        "Sample Size & Data Quality",
+        "Risk Factors & Considerations",
+        "Next Steps & Action Items"
+    ]
 
-def validate_recommendation(state: RecommendationState) -> RecommendationState:
-    """Node: Validate that recommendation has required structure"""
-    recommendation = state.get("recommendation")
+    if len(topics) < 5:
+        # Pad with default topics
+        while len(topics) < 5:
+            topics.append({
+                "title": default_titles[len(topics)] if len(topics) < len(default_titles) else "Additional Analysis",
+                "content": "Analysis pending due to insufficient data."
+            })
+    elif len(topics) > 5:
+        # Trim to 5
+        topics = topics[:5]
 
-    if not recommendation:
-        state["error"] = "No recommendation generated"
-        return state
-
-    # Validate structure
-    if "decision" not in recommendation:
-        state["error"] = "Missing decision field"
-    elif "topics" not in recommendation:
-        state["error"] = "Missing topics field"
-    elif len(recommendation.get("topics", [])) != 5:
-        # If we don't have exactly 5 topics, pad or trim
-        topics = recommendation.get("topics", [])
-        if len(topics) < 5:
-            # Pad with empty topics
-            default_titles = [
-                "Statistical Significance & Confidence",
-                "Business Impact Assessment",
-                "Sample Size & Data Quality",
-                "Risk Factors & Considerations",
-                "Next Steps & Action Items"
-            ]
-            while len(topics) < 5:
-                topics.append({
-                    "title": default_titles[len(topics)] if len(topics) < len(default_titles) else "Additional Analysis",
-                    "content": "Analysis pending."
-                })
-        else:
-            # Trim to 5
-            topics = topics[:5]
-        recommendation["topics"] = topics
-
-    return state
-
-
-# Build the LangGraph workflow
-workflow = StateGraph(RecommendationState)
-
-# Add nodes
-workflow.add_node("prepare_prompts", prepare_prompts)
-workflow.add_node("generate_recommendation", generate_recommendation)
-workflow.add_node("validate_recommendation", validate_recommendation)
-
-# Add edges
-workflow.set_entry_point("prepare_prompts")
-workflow.add_edge("prepare_prompts", "generate_recommendation")
-workflow.add_edge("generate_recommendation", "validate_recommendation")
-workflow.add_edge("validate_recommendation", END)
-
-# Compile the graph
-recommendation_graph = workflow.compile()
+    return topics
 
 
 # ================================================================
-# MAIN FUNCTION (Updated with LangGraph)
-# ================================================================
-
-def generate_ai_recommendation(test_data, report_data, company_data):
-    """
-    Generate AI recommendation using LangGraph workflow and structured outputs.
-
-    Args:
-        test_data: AB test data object
-        report_data: Statistical report data dict
-        company_data: Company context data dict
-
-    Returns:
-        dict: Structured recommendation with decision and 5 topics
-    """
-    # Prepare initial state
-    initial_state = {
-        "test_data": test_data,
-        "report_data": report_data,
-        "company_data": company_data,
-        "system_prompt": "",
-        "user_prompt": "",
-        "recommendation": None,
-        "error": None
-    }
-
-    # Run the workflow
-    final_state = recommendation_graph.invoke(initial_state)
-
-    # Return the recommendation
-    return final_state["recommendation"]
-
-
-# ================================================================
-# HELPER FUNCTIONS (Unchanged)
+# HELPER FUNCTIONS
 # ================================================================
 
 def generate_ai_summary(recommendation):
