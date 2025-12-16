@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block page_title %}Stakeholder Reports{% endblock %}
+{% block page_button %}
+    <div class="button-container">
+        <button class="btn btn-secondary" id="toggleBuilderBtn" style="display: none;">Customize Report</button>
+
+        <!-- Export Dropdown -->
+        <div class="export-dropdown" id="exportDropdown" style="display: none;">
+            <button class="btn" id="exportBtn">
+                Export Report ▼
+            </button>
+            <div class="export-menu" id="exportMenu">
+                <div class="export-group">
+                    <div class="group-label">Quick Export</div>
+                    <button class="export-option" data-format="pdf" data-template="executive">
+                        <span class="export-icon">📄</span>
+                        <div class="export-details">
+                            <div class="export-title">PDF - Executive Summary</div>
+                            <div class="export-desc">Key results & recommendations only</div>
+                        </div>
+                    </button>
+                    <button class="export-option" data-format="pptx" data-template="full">
+                        <span class="export-icon">📊</span>
+                        <div class="export-details">
+                            <div class="export-title">PowerPoint - Full Report</div>
+                            <div class="export-desc">Complete presentation deck</div>
+                        </div>
+                    </button>
+                    <button class="export-option" data-format="pdf" data-template="technical">
+                        <span class="export-icon">📑</span>
+                        <div class="export-details">
+                            <div class="export-title">PDF - Technical Analysis</div>
+                            <div class="export-desc">Detailed stats & charts</div>
+                        </div>
+                    </button>
+                </div>
+                <div class="export-group">
+                    <div class="group-label">Share</div>
+                    <button class="export-option" data-action="clipboard">
+                        <span class="export-icon">📋</span>
+                        <div class="export-details">
+                            <div class="export-title">Copy to Clipboard</div>
+                            <div class="export-desc">Paste into Slack/Teams</div>
+                        </div>
+                    </button>
+                    <button class="export-option" data-format="print">
+                        <span class="export-icon">🖨️</span>
+                        <div class="export-details">
+                            <div class="export-title">Print</div>
+                            <div class="export-desc">Use browser print dialog</div>
+                        </div>
+                    </button>
+                </div>
+                <div class="export-group">
+                    <div class="group-label">Custom</div>
+                    <button class="export-option" data-action="custom">
+                        <span class="export-icon">⚙️</span>
+                        <div class="export-details">
+                            <div class="export-title">Custom Export</div>
+                            <div class="export-desc">Choose sections & format</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block content %}
+
+    <div class="reports-container">
+        <!-- Test Selection Section -->
+        <div class="card big">
+            <h2>Generate Stakeholder Report</h2>
+            <p>Select an A/B test to generate a comprehensive stakeholder presentation</p>
+
+            <div class="form-group">
+                <label for="testSelector">Select A/B Test:</label>
+                <select id="testSelector" class="test-selector">
+                    <option value="">-- Select a test --</option>
+                    {% for test in tests %}
+                        {% set has_variants = namespace(value=False) %}
+                        {% for variant in variants %}
+                            {% if variant.test_id == test.id %}
+                                {% set has_variants.value = True %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if has_variants.value %}
+                            <option value="{{ test.id }}"
+                                data-name="{{ test.name }}"
+                                data-description="{{ test.description }}"
+                                data-metric="{{ test.metric }}"
+                                data-created="{{ test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A' }}">
+                                {{ test.name }} - {{ test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A' }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Presentation Builder Controls (Hidden until test is selected) -->
+        <div id="builderControls" class="card big builder-panel" style="display: none;">
+            <div class="builder-header">
+                <h3>Presentation Builder</h3>
+                <p>Drag sections to reorder • Toggle visibility • Customize your presentation</p>
+            </div>
+
+            <div class="builder-actions">
+                <button class="btn btn-secondary btn-sm" id="resetLayoutBtn">Reset to Default</button>
+                <button class="btn btn-secondary btn-sm" id="saveLayoutBtn">Save Layout</button>
+                <button class="btn btn-secondary btn-sm" id="loadLayoutBtn">Load Saved</button>
+            </div>
+
+            <div class="section-controls">
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="header" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Test Header</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="keyResults" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Key Results</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="executiveSummary" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Executive Summary</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="variantPerformance" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Variant Performance</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="conversionFunnel" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Conversion Funnel</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="aiRecommendations" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">AI Recommendations</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="statisticalDetails" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Statistical Details</span>
+                </div>
+                <div class="control-item">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="section-toggle" data-section="charts" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="control-label">Charts</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Container (Hidden until test is selected) -->
+        <div id="reportContainer" class="draggable-container" style="display: none;">
+
+            <!-- Test Header Section -->
+            <div class="report-section-wrapper" data-section="header" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section">
+                    <div class="report-header">
+                        <h1 id="reportTestName">Test Name</h1>
+                        <div class="report-meta">
+                            <span id="reportDate"></span>
+                            <span id="reportMetric"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Results Section -->
+            <div class="report-section-wrapper" data-section="keyResults" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section gradient-section">
+                    <h2>Key Results</h2>
+                    <div class="column-grid-3">
+                        <div class="result-card">
+                            <h3>Statistical Significance</h3>
+                            <p id="reportSignificance" class="result-value">-</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Performance Change</h3>
+                            <p id="reportPerformance" class="result-value">-</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Confidence</h3>
+                            <p id="reportPValue" class="result-value">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Executive Summary Section -->
+            <div class="report-section-wrapper" data-section="executiveSummary" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section">
+                    <h2>Executive Summary</h2>
+                    <p id="reportSummary" class="summary-text">No summary available.</p>
+                </div>
+            </div>
+
+            <!-- Variant Performance Section -->
+            <div class="report-section-wrapper" data-section="variantPerformance" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section">
+                    <h2>Variant Performance</h2>
+                    <div id="variantComparison" class="column-grid-2">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Funnel Section -->
+            <div class="report-section-wrapper" data-section="conversionFunnel" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section">
+                    <h2>Conversion Funnel</h2>
+                    <div id="funnelVisualization" class="column-grid-2">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Recommendations Section -->
+            <div class="report-section-wrapper" data-section="aiRecommendations" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section ai-section">
+                    <h2>Strategic Recommendations</h2>
+                    <div id="aiRecommendations">
+                        <p>No recommendations available.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistical Details Section -->
+            <div class="report-section-wrapper" data-section="statisticalDetails" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="card big report-section">
+                    <h2>Statistical Details</h2>
+                    <div id="statisticalDetails" class="stats-grid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="report-section-wrapper" data-section="charts" draggable="true">
+                <div class="drag-handle">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
+                <div class="column-grid-2">
+                    <div class="card big report-section">
+                        <h3>Conversion Rate Comparison</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="reportConversionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card big report-section">
+                        <h3>Sample Size Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="reportSampleChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Empty State -->
+        {% if not tests or tests|length == 0 %}
+            <div class="card big">
+                <p>No tests available. Please create an A/B test first.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    {% block scripts %}
+        <!-- Chart.js for visualizations -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <!-- Export Libraries -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+        <script>
+            // Pass data from Flask to JavaScript
+            const testsData = {{ tests_json | safe }};
+            const variantsData = {{ variants_json | safe }};
+            const reportsData = {{ reports_json | safe }};
+        </script>
+        <script src="{{ url_for('static', filename='report_generator.js') }}"></script>
+        <script src="{{ url_for('static', filename='report_exporter.js') }}"></script>
+    {% endblock %}
+
+{% endblock %}

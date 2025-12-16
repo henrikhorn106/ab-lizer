@@ -293,6 +293,54 @@ def tests_page(user_id):
                            )
 
 
+@app.route("/reports/<int:user_id>")
+@login_required
+def reports_page(user_id):
+    """Stakeholder report generation page"""
+    user = db_manager.get_user(user_id)
+    tests = db_manager.get_ab_tests(user.company_id)
+    variants = db_manager.get_all_variants(user.company_id)
+    reports = db_manager.get_all_reports()
+
+    # Convert data to JSON for JavaScript
+    tests_json = json.dumps([{
+        'id': test.id,
+        'name': test.name,
+        'description': test.description,
+        'metric': test.metric,
+        'created_at': test.created_at.strftime('%B %d, %Y') if test.created_at else 'N/A'
+    } for test in tests])
+
+    variants_json = json.dumps([{
+        'id': variant.id,
+        'test_id': variant.test_id,
+        'name': variant.name,
+        'impressions': variant.impressions,
+        'conversions': variant.conversions,
+        'conversion_rate': variant.conversion_rate
+    } for variant in variants])
+
+    reports_json = json.dumps([{
+        'id': report.id,
+        'test_id': report.test_id,
+        'p_value': report.p_value,
+        'summary': report.summary,
+        'significance': report.significance,
+        'increase_percent': report.increase_percent,
+        'ai_recommendation': json.loads(report.ai_recommendation) if report.ai_recommendation and report.ai_recommendation.startswith('{') else report.ai_recommendation
+    } for report in reports])
+
+    return render_template("reports.html",
+                           user=user,
+                           tests=tests,
+                           variants=variants,
+                           reports=reports,
+                           tests_json=tests_json,
+                           variants_json=variants_json,
+                           reports_json=reports_json
+                           )
+
+
 @app.route("/tests/<int:user_id>", methods=["POST"])
 @login_required
 def tests_page_create_test(user_id):
