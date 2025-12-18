@@ -250,8 +250,8 @@ def home_page_create_variant(user_id, test_id):
     transform_test_data(test_data, db_manager.get_variants(test_id), report_data)
 
     # 3. Report data
-    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data)
-    ai_summary = generate_ai_summary(ai_recommendation)
+    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data, user_id)
+    ai_summary = generate_ai_summary(ai_recommendation, user_id)
 
     # Calculate increase percentage
     increase_percent = calculate_increase_percent(
@@ -564,8 +564,8 @@ def edit_test_page_update_variant(user_id, test_id):
     transform_test_data(test_data, db_manager.get_variants(test_id), report_data)
 
     # 3. Report data
-    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data)
-    ai_summary = generate_ai_summary(ai_recommendation)
+    ai_recommendation = generate_ai_recommendation(test_data, report_data, company_data, user_id)
+    ai_summary = generate_ai_summary(ai_recommendation, user_id)
 
     # Calculate increase percentage
     increase_percent = calculate_increase_percent(
@@ -666,8 +666,11 @@ def generate_description_api():
     if not test_name:
         return jsonify({"error": "Test name is required"}), 400
 
+    # Get user_id from session
+    user_id = session.get('user_id', 1)  # Default to user 1 if not in session
+
     try:
-        description = generate_test_description(test_name)
+        description = generate_test_description(test_name, user_id)
         return jsonify({"description": description})
     except Exception as e:
         print(f"Error generating description: {str(e)}")
@@ -681,21 +684,60 @@ def generate_description_api():
 @app.route("/settings/<int:user_id>")
 @login_required
 def settings(user_id):
+    from routes.llm_config import get_available_models, get_default_model
+
     user = db_manager.get_user(user_id)
     company = db_manager.get_company(user.company_id)
 
+    # Get available models based on configured API keys
+    available_models = get_available_models()
+
+    # Calculate which providers are missing
+    all_providers = {'openai': 'OpenAI', 'anthropic': 'Anthropic', 'google': 'Google'}
+    configured_providers = set()
+    for model_id in available_models.keys():
+        provider = model_id.split('-')[0]
+        configured_providers.add(provider)
+
+    missing_providers = [
+        all_providers[p] for p in all_providers.keys()
+        if p not in configured_providers
+    ]
+
+    # Ensure user has a valid model selected
+    if not user.llm_model or user.llm_model not in available_models:
+        user.llm_model = get_default_model()
+
     return render_template("settings.html",
                            user=user,
-                           company=company
+                           company=company,
+                           available_models=available_models,
+                           missing_providers=missing_providers
                            )
 
 
 @app.route("/settings/<int:user_id>", methods=["POST"])
 @login_required
 def update_user(user_id):
+    from routes.llm_config import get_available_models
+
     name = request.form.get("name")
     email = request.form.get("email")
-    db_manager.update_user(user_id, name, email)
+    llm_model = request.form.get("llm_model")
+
+    # Validate model selection if provided
+    if llm_model:
+        available_models = get_available_models()
+        if llm_model not in available_models:
+            flash(f"Invalid model selection: {llm_model}", "error")
+            return redirect(url_for("settings", user_id=user_id))
+
+        db_manager.update_model(user_id, llm_model)
+        flash("Settings updated successfully!", "success")
+
+    if name and email:
+        db_manager.update_user(user_id, name, email, llm_model)
+        flash("Settings updated successfully!", "success")
 
     return redirect(url_for("settings", user_id=user_id))
 

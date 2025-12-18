@@ -58,6 +58,7 @@ class users(db.Model):
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), nullable=False, unique=True)
     password_hash = db.Column(db.String(255), nullable=True)  # Nullable for existing users
+    llm_model = db.Column(db.String(100), nullable=False, default='openai-gpt-4o-mini')
 
     __repr__ = lambda self: f'<User {self.name}>'
 

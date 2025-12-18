@@ -18,23 +18,60 @@
             </form>
         </div>
         <div class="card long">
+            <h2>AI Model Preferences</h2>
+            <form method="post" action="{{ url_for('update_user', user_id=user.id) }}">
+                <div class="form-group">
+                    <label for="llm_model">Preferred AI Model:</label>
+                    <select id="llm_model" name="llm_model">
+                        {% for model_id, (display_name, description) in available_models.items() %}
+                            <option value="{{ model_id }}"
+                                    {% if user.llm_model == model_id %}selected{% endif %}>
+                                {{ display_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="help-text">
+                        {% for model_id, (display_name, description) in available_models.items() %}
+                            {% if user.llm_model == model_id %}
+                                {{ description }}
+                            {% endif %}
+                        {% endfor %}
+                    </small>
+                </div>
+
+                {% if missing_providers %}
+                <div class="info-box">
+                    <p><strong>Note:</strong> Some providers are not available because API keys are not configured:</p>
+                    <ul>
+                        {% for provider in missing_providers %}
+                        <li>{{ provider }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p>Contact your administrator to enable additional AI providers.</p>
+                </div>
+                {% endif %}
+
+                <button class="btn" type="submit">Update Model</button>
+            </form>
+        </div>
+        <div class="card long">
             <h2>Update Your Company</h2>
             <form method="post" action="{{ url_for('update_company', user_id=user.id, company_id=company.id) }}">
                 <div class="form-group">
                     <label for="company_name">Company Name:</label>
-                    <input type="text" name="company_name" value="{{ company.name }}">
+                    <input id="company_name" type="text" name="company_name" value="{{ company.name }}">
                 </div>
                 <div class="form-group">
                     <label for="website">Website:</label>
-                    <input type="text" name="website" value="{{ company.website }}">
+                    <input id="website" type="text" name="website" value="{{ company.website }}">
                 </div>
                 <div class="form-group">
                     <label for="year">Year:</label>
-                    <input type="text" name="year" value="{{ company.year }}">
+                    <input id="year" type="text" name="year" value="{{ company.year }}">
                 </div>
                 <div class="form-group">
                     <label for="audience">Audience:</label>
-                    <textarea type="text" name="audience" rows="3">{{ company.audience }}</textarea>
+                    <textarea id="audience" type="text" name="audience" rows="3">{{ company.audience }}</textarea>
                 </div>
                 <button class="btn" type="submit">Update</button>
             </form>

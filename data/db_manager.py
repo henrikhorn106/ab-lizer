@@ -116,11 +116,21 @@ class DBManager:
         report.ai_recommendation = ai_recommendation
         db.session.commit()
 
-    def update_user(self, user_id, name, email):
+    def update_user(self, user_id, name, email, llm_model=None):
         user = users.query.filter_by(id=user_id).first()
         user.name = name
         user.email = email
+        # Update LLM model if provided
+
         db.session.commit()
+
+
+    def update_model(self, user_id, llm_model):
+        user = users.query.filter_by(id=user_id).first()
+        if llm_model is not None:
+            user.llm_model = llm_model
+            db.session.commit()
+
 
     def update_company(self, company_id, name, year, audience, website):
         company = companies.query.filter_by(id=company_id).first()

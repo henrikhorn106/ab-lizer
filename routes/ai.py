@@ -1,20 +1,17 @@
-from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import json
 from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
 
+# Import LLM configuration
+from routes.llm_config import get_llm_instance, get_default_model
+from data.db_manager import DBManager
 
 # Load .env file
 load_dotenv()
 
-# Access API key and start client
-api_keys = os.environ.get('OPENAI_API_KEY')
-client = OpenAI()
-
-# Initialize LangChain OpenAI client for structured outputs
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+# Initialize DB manager for user lookups
+db_manager = DBManager()
 
 
 # ================================================================
@@ -42,10 +39,43 @@ class AIRecommendation(BaseModel):
 
 
 # ================================================================
+# HELPER FUNCTION TO GET USER'S LLM
+# ================================================================
+
+def _get_user_llm(user_id: int):
+    """
+    Get the LLM instance for a specific user based on their settings.
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        Initialized LangChain chat model instance
+
+    Raises:
+        ValueError: If user not found or LLM initialization fails
+    """
+    try:
+        user = db_manager.get_user(user_id)
+        if not user:
+            raise ValueError(f"User not found: {user_id}")
+
+        model_id = user.llm_model or get_default_model()
+        return get_llm_instance(model_id)
+
+    except Exception as e:
+        print(f"Error getting user LLM: {str(e)}")
+        # Fallback to default model
+        print("Falling back to default model")
+        default_model = get_default_model()
+        return get_llm_instance(default_model)
+
+
+# ================================================================
 # MAIN FUNCTION WITH STRUCTURED OUTPUT
 # ================================================================
 
-def generate_ai_recommendation(test_data, report_data, company_data):
+def generate_ai_recommendation(test_data, report_data, company_data, user_id):
     """
     Generate AI recommendation using structured outputs.
 
@@ -53,11 +83,15 @@ def generate_ai_recommendation(test_data, report_data, company_data):
         test_data: AB test data object
         report_data: Statistical report data dict
         company_data: Company context data dict
+        user_id: User ID for model selection
 
     Returns:
         dict: Structured recommendation with decision and 5 topics
     """
-    print("Generating AI recommendation with structured output...")
+    print(f"Generating AI recommendation for user {user_id}...")
+
+    # Get user's selected LLM
+    llm = _get_user_llm(user_id)
 
     # Format statistical data
     method_name = report_data.get('method', 'statistical test')
@@ -213,27 +247,32 @@ def _ensure_five_topics(topics: list) -> list:
 # HELPER FUNCTIONS
 # ================================================================
 
-def generate_ai_summary(recommendation):
+def generate_ai_summary(recommendation, user_id):
     """
     Generate a concise executive summary from the AI recommendation.
 
     Args:
         recommendation: Either a dict with structured recommendation or plain text
+        user_id: User ID for model selection
 
     Returns:
         str: Concise executive summary (max 200 characters)
     """
-    print("Generating AI summary...")
+    print(f"Generating AI summary for user {user_id}...")
 
-    # Format recommendation for summary generation
-    if isinstance(recommendation, dict):
-        # Convert structured recommendation to readable text
-        recommendation_text = f"{recommendation.get('decision', '')}\n\n"
-        for topic in recommendation.get('topics', []):
-            recommendation_text += f"{topic.get('title', '')}: {topic.get('content', '')}\n"
-        recommendation = recommendation_text
+    try:
+        # Get user's selected LLM
+        llm = _get_user_llm(user_id)
 
-    system_prompt = """You are an expert at creating concise, actionable executive summaries for A/B test results.
+        # Format recommendation for summary generation
+        if isinstance(recommendation, dict):
+            # Convert structured recommendation to readable text
+            recommendation_text = f"{recommendation.get('decision', '')}\n\n"
+            for topic in recommendation.get('topics', []):
+                recommendation_text += f"{topic.get('title', '')}: {topic.get('content', '')}\n"
+            recommendation = recommendation_text
+
+        system_prompt = """You are an expert at creating concise, actionable executive summaries for A/B test results.
 
 YOUR TASK:
 Extract and summarize the most critical information from the detailed recommendation into a brief, scannable format.
@@ -255,44 +294,44 @@ EXAMPLES:
 "Continue testing: Early positive signal (+8.7%) but not yet significant (p=0.089). Need more data."
 """
 
-    user_prompt = f"""Create a concise executive summary from this recommendation:
+        user_prompt = f"""Create a concise executive summary from this recommendation:
 
 {recommendation}
 
 Summary:"""
 
-    response = client.responses.parse(
-        model="gpt-5-mini",
-        input=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            },
-        ]
-    )
+        # Use unified LangChain interface
+        response = llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ])
 
-    print("AI summary generated!")
+        print("AI summary generated!")
+        return response.content
 
-    return response.output_text
+    except Exception as e:
+        print(f"Error generating summary: {str(e)}")
+        return "Error generating summary. Please try again."
 
 
-def generate_test_description(test_name):
+def generate_test_description(test_name, user_id):
     """
     Generate an AB test description based on the test name using AI.
 
     Args:
         test_name: The name of the AB test
+        user_id: User ID for model selection
 
     Returns:
         A concise description of the test
     """
-    print(f"Generating description for test: {test_name}")
+    print(f"Generating description for test: {test_name} (user {user_id})")
 
-    system_prompt = """You are an AB Testing assistant that helps create clear and concise test descriptions.
+    try:
+        # Get user's selected LLM
+        llm = _get_user_llm(user_id)
+
+        system_prompt = """You are an AB Testing assistant that helps create clear and concise test descriptions.
 
     RULES:
     - Generate a 1-2 sentence description based on the test name
@@ -306,22 +345,17 @@ def generate_test_description(test_name):
     Description: Testing the impact of button color on checkout completion rates. Comparing blue vs green CTA button to optimize conversions.
     """
 
-    user_prompt = f"""Generate a clear description for an AB test with this name: {test_name}"""
+        user_prompt = f"""Generate a clear description for an AB test with this name: {test_name}"""
 
-    response = client.responses.parse(
-        model="gpt-5-mini",
-        input=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            },
-        ]
-    )
+        # Use unified LangChain interface
+        response = llm.invoke([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ])
 
-    print("Test description generated!")
+        print("Test description generated!")
+        return response.content
 
-    return response.output_text
+    except Exception as e:
+        print(f"Error generating description: {str(e)}")
+        return f"Testing {test_name} to optimize conversion rates."
