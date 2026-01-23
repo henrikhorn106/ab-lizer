@@ -1,0 +1,15 @@
+# Web framework
+flask
+flask-sqlalchemy
+
+# AI/LLM integrations
+langchain-openai
+langchain-anthropic
+langchain-google-genai
+pydantic
+
+# Statistics
+scipy
+
+# Environment variables
+python-dotenv
